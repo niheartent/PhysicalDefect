@@ -1,0 +1,204 @@
+
+package PhysicalDefect.patches;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePostfixPatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePrefixPatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.common.DamageAction;
+import com.megacrit.cardcrawl.cards.AbstractCard;
+import com.megacrit.cardcrawl.cards.DamageInfo;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
+import com.megacrit.cardcrawl.core.AbstractCreature;
+import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.helpers.FontHelper;
+import com.megacrit.cardcrawl.powers.AbstractPower;
+
+import PhysicalDefect.actions.RandomScatteredAction;
+import PhysicalDefect.actions.ScatteredDamageAction;
+import PhysicalDefect.characters.MyPhysicalDefect;
+
+import basemod.ReflectionHacks;
+
+public class NegativeFocusPatches {
+
+    // 负集中相关工具类
+    public static int getScatteredDamage(AbstractPlayer p, int originalOutput, int focusAmt) {
+        // 1. 基础检查
+        if (originalOutput <= 0)
+            return 0;
+        int M = Math.abs(focusAmt);
+        if (M == 0)
+            return originalOutput;
+
+        // 2. 剥离力量
+        int strengthAmt = 0;
+        if (p.hasPower("Strength")) {
+            strengthAmt = p.getPower("Strength").amount;
+        }
+
+        int strippedBase = originalOutput - strengthAmt;
+
+        // 3. 拆分
+        int basePerHit = Math.max(1, strippedBase / M);
+
+        // 4. 回填力量
+        // 这是每一段实际打出去的面板数值
+        return basePerHit + strengthAmt;
+    }
+
+    public static boolean isScatterCard(AbstractPlayer p, DamageInfo.DamageType type) {
+        // 这里我们只判定类型，具体的 DamageAction 拦截在 Patch 里做
+        // 如果你想更严格，可以在这里加入卡牌 ID 黑名单等
+        return type == DamageInfo.DamageType.NORMAL;
+    }
+
+    // =================================================================
+    // 1. 核心战斗逻辑：拦截伤害并分散 (原 NegativeFocusPatch)
+    // =================================================================
+    @SpirePatch(clz = DamageAction.class, method = "update")
+    public static class ScatteringLogic {
+        @SpirePrefixPatch
+        public static SpireReturn<Void> Prefix(DamageAction __instance) {
+            // 安全检查
+            if (__instance.isDone || __instance instanceof ScatteredDamageAction) {
+                return SpireReturn.Continue();
+            }
+
+            DamageInfo info = ReflectionHacks.getPrivate(__instance, DamageAction.class, "info");
+            AbstractPlayer p = AbstractDungeon.player;
+
+            if (info.owner == p &&
+                    info.type == DamageInfo.DamageType.NORMAL &&
+                    p instanceof MyPhysicalDefect) {
+
+                if (info.output <= 0)
+                    return SpireReturn.Continue();
+
+                AbstractPower focusPower = p.getPower("Focus");
+                if (focusPower != null && focusPower.amount < 0) {
+
+                    int M = Math.abs(focusPower.amount);
+
+                    // 使用工具类计算回填力量后的单段伤害
+                    // int damageToSend = getScatteredDamage(p, info.output, focusPower.amount);
+                    int damageToSend = info.output;
+                    AbstractGameAction.AttackEffect effect = __instance.attackEffect;
+
+                    // 1. 添加 (M-1) 次延迟随机攻击
+                    for (int i = 1; i < M; i++) {
+                        AbstractDungeon.actionManager.addToTop(new RandomScatteredAction(
+                                new DamageInfo(p, damageToSend, DamageInfo.DamageType.NORMAL),
+                                effect));
+                    }
+
+                    // 2. 添加 1 次强制命中攻击
+                    AbstractCreature originalTarget = __instance.target;
+                    if (originalTarget == null || originalTarget.isDeadOrEscaped()) {
+                        originalTarget = AbstractDungeon.getMonsters().getRandomMonster(null, true,
+                                AbstractDungeon.cardRandomRng);
+                    }
+
+                    if (originalTarget != null) {
+                        AbstractDungeon.actionManager.addToTop(new ScatteredDamageAction(
+                                originalTarget,
+                                new DamageInfo(p, damageToSend, DamageInfo.DamageType.NORMAL),
+                                effect));
+                    }
+
+                    __instance.isDone = true;
+                    return SpireReturn.Return();
+                }
+            }
+            return SpireReturn.Continue();
+        }
+    }
+
+    // =================================================================
+    // 2. 卡面数值修改逻辑：显示单段伤害 (原 NegativeFocusCardDamagePatch)
+    // =================================================================
+    @SpirePatch(clz = AbstractCard.class, method = "applyPowers")
+    @SpirePatch(clz = AbstractCard.class, method = "calculateCardDamage")
+    public static class CardValueDisplay {
+        @SpirePostfixPatch
+        public static void Postfix(AbstractCard __instance) {
+            AbstractPlayer p = AbstractDungeon.player;
+            if (p == null)
+                return;
+
+            // 基础检查：物理机 & 攻击牌 & 符合类型
+            if (p instanceof MyPhysicalDefect &&
+                    __instance.type == AbstractCard.CardType.ATTACK &&
+                    isScatterCard(p, DamageInfo.DamageType.NORMAL)) {
+
+                AbstractPower focus = p.getPower("Focus");
+                if (focus != null && focus.amount < 0) {
+
+                    int originalDmg = __instance.damage;
+
+                    int splitDmg = getScatteredDamage(p, originalDmg, focus.amount);
+
+                    if (splitDmg != originalDmg && originalDmg > 0) {
+                        __instance.damage = splitDmg;
+
+                        __instance.isDamageModified = true;
+                    }
+                }
+            }
+        }
+    }
+
+    // =================================================================
+    // 3. 卡面渲染逻辑：右上角显示 xM (原 NegativeFocusRenderPatch)
+    // =================================================================
+    @SpirePatch(clz = AbstractCard.class, method = "render",
+            // 【关键修复】明确指定参数类型为 SpriteBatch
+            paramtypez = {
+                    SpriteBatch.class
+            })
+    public static class CardRender {
+        // 定义显眼的颜色
+        private static final Color MULTI_HIT_COLOR = Settings.GOLD_COLOR.cpy();
+
+        @SpirePostfixPatch
+        public static void Postfix(AbstractCard __instance, SpriteBatch sb) {
+            // ... (内部逻辑保持不变，不需要改动) ...
+            if (AbstractDungeon.player == null)
+                return;
+            AbstractPlayer p = AbstractDungeon.player;
+
+            if (p instanceof MyPhysicalDefect &&
+                    __instance.type == AbstractCard.CardType.ATTACK &&
+                    __instance.damage > 0 &&
+                    isScatterCard(p, DamageInfo.DamageType.NORMAL)) {
+
+                AbstractPower focus = p.getPower("Focus");
+                if (focus != null && focus.amount < 0) {
+
+                    int M = Math.abs(focus.amount);
+                    if (M <= 1)
+                        return;
+
+                    float xOffset = 130.0F;
+                    float yOffset = 180.0F;
+
+                    FontHelper.renderRotatedText(
+                            sb,
+                            FontHelper.cardEnergyFont_L,
+                            "x" + M,
+                            __instance.current_x,
+                            __instance.current_y,
+                            xOffset * __instance.drawScale * Settings.scale,
+                            yOffset * __instance.drawScale * Settings.scale,
+                            __instance.angle,
+                            true,
+                            MULTI_HIT_COLOR);
+                }
+            }
+        }
+    }
+}

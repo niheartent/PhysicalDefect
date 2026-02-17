@@ -1,0 +1,14 @@
+{
+    "modid": "PhysicalDefect",
+    "name": "PhysicalDefect",
+    "author_list": [
+        "nihe"
+    ],
+    "description": "故障机器人是我在杀戮尖塔中第四喜欢的角色，但是球牌卡我物理机听牌和启动了，为了修复这一问题我新添加了一个角色，一个卡池中去除了大量球牌（除等离子球外）的物理机。 新增负集中散射机制：拥有 N 点负集中时，你的单体攻击牌将被拆分为 N 段随机伤害。每段攻击仅造成 1/N 的基础伤害，但能完整享受力量加成。可以在模组界面选择开关此机制 \nThe Defect is my 4th favorite character in Slay the Spire. However, Orb cards often clutter the deck, hindering the setup and startup of Physical builds. To fix this, I created a new character: a Physical Defect with most Orb cards removed from the card pool (except for Plasma). Negative Focus Scattering: With N Negative Focus, your single-target Attacks are split into N random hits. Each hit deals 1/N base damage but applies full Strength. (Can be toggled in the config menu)",
+    "version": "0.1.0",
+    "sts_version": "12-22-2020",
+    "mts_version": "3.30.0",
+    "dependencies": [
+        "basemod"
+    ]
+}

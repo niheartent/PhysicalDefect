@@ -1,0 +1,9 @@
+{
+    "PhysicalDefect:BackupBattery": {
+        "NAME": "BackupBattery",
+        "FLAVOR": "Backup Battery!!!!!!!!",
+        "DESCRIPTIONS": [
+            "At the start of each combat, #yChannel #b1 #yPlasma."
+        ]
+    }
+}

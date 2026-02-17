@@ -1,0 +1,10 @@
+{
+    "PhysicalDefect:MyPhysicalDefect": {
+        "NAMES": [
+            "物理机"
+        ],
+        "TEXT": [
+            "一个经过改造的物理机器人，移除了冗余的电、冰、黑球生成模块 NL 专注于使用物理战斗。"
+        ]
+    }
+}

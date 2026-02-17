@@ -1,0 +1,10 @@
+{
+    "PhysicalDefect:MyPhysicalDefect": {
+        "NAMES": [
+            "Physical Defect"
+        ],
+        "TEXT": [
+            "A modified Defect with redundant Orb generation modules removed,\nfocusing purely on NL Kinetic combat."
+        ]
+    }
+}

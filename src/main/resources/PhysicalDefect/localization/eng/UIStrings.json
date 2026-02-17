@@ -1,0 +1,12 @@
+{
+    "PhysicalDefect:Config": {
+      "TEXT": [
+        "Enable Negative Focus Scattering mechanism. \nOtherwise, Negative Focus will only act as a negative effect that reduces Charge Orb values."
+      ]
+    },
+    "PhysicalDefect:FocusTooltip": {
+      "TEXT": [
+        "Your #yAttacks will be split into #b{0} hits of scattered damage and attack random target."
+      ]
+    }
+  }

@@ -123,7 +123,7 @@ public class NegativeFocusPatches {
             if (mVal > 1) {
                 // 将递归动作加入队列底部
                 AbstractDungeon.actionManager.addToBottom(
-                        new ScatterRecursiveAction(p, card, mVal - 1));
+                        new ScatterRecursiveAction(p, card, mVal - 1, 1));
             }
 
             // for (int i = 1; i < mVal; i++) {

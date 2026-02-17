@@ -6,7 +6,7 @@
     },
     "PhysicalDefect:FocusTooltip": {
       "TEXT": [
-        "Your #yAttacks will be split into #b{0} hits of scattered damage and attack random target."
+        "Your #yAttacks will be split into #b{0} hits of scattered damage and attack random target, Strength gain decreases with each subsequent scatter."
       ]
     }
   }

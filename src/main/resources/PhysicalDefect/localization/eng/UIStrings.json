@@ -3,5 +3,11 @@
     "TEXT": [
       "Enable Negative Focus Scattering mechanism. \nOtherwise, Negative Focus will only act as a negative effect that reduces Charge Orb values."
     ]
+  },
+  "PhysicalDefect:DefragmentPatch": {
+    "TEXT": [
+      " NL Consume all physicaldefect:Fragmentation : Double Dexterity.",
+      " NL Dexterity reset to 0 if negative."
+    ]
   }
 }

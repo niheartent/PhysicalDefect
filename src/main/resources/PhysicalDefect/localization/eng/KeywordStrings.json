@@ -1,0 +1,10 @@
+[
+    {
+        "PROPER_NAME": "Fragmentation",
+        "NAMES": [
+            "fragmentation",
+            "Fragmentation"
+        ],
+        "DESCRIPTION": "Gain #b1 stack for every #b2 Focus lost. NL Your single-target #yAttacks are split into #b(1 #y+ #yStacks) hits."
+    }
+]

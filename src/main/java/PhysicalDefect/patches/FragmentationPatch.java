@@ -43,13 +43,43 @@ public class FragmentationPatch {
     // =================================================================
     // 1. 核心判定与公式
     // =================================================================
+    // private static boolean shouldFragment(AbstractPlayer p, AbstractCard card) {
+    // if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
+    // return false;
+    // if (card.type != AbstractCard.CardType.ATTACK)
+    // return false;
+    // boolean isAoe = ReflectionHacks.getPrivate(card, AbstractCard.class,
+    // "isMultiDamage");
+    // return !isAoe && card.damageTypeForTurn == DamageInfo.DamageType.NORMAL;
+    // }
+    // 原有的判定方法增加位置检查
     private static boolean shouldFragment(AbstractPlayer p, AbstractCard card) {
+        // 1. 基础检查：必须有玩家、有能力、是攻击牌
         if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
             return false;
         if (card.type != AbstractCard.CardType.ATTACK)
             return false;
+
+        // 2. AOE 检查：AOE 不生效
         boolean isAoe = ReflectionHacks.getPrivate(card, AbstractCard.class, "isMultiDamage");
-        return !isAoe && card.damageTypeForTurn == DamageInfo.DamageType.NORMAL;
+        if (isAoe || card.damageTypeForTurn != DamageInfo.DamageType.NORMAL) {
+            return false;
+        }
+
+        // 3. 【核心修正】位置与状态检查
+        // 情况 A: 它是衍生出来的分身卡 (isFragmentedInstance) -> 必须拆分伤害！
+        boolean isDerivative = CardFields.isFragmentedInstance.get(card);
+
+        // 情况 B: 它是本体卡，且在手牌或正在打出 -> 需要拆分伤害
+        boolean isInHand = p.hand.contains(card);
+        boolean isInLimbo = p.limbo.contains(card);
+
+        // 如果既不是分身，也不在手牌/打出状态（比如在弃牌堆），就不处理
+        if (!isDerivative && !isInHand && !isInLimbo) {
+            return false;
+        }
+
+        return true;
     }
 
     private static int calculateSplitDamage(int baseDamage, int fragLevel, int strengthAmt) {
@@ -172,17 +202,55 @@ public class FragmentationPatch {
         }
     }
 
+    // // =================================================================
+    // // 5. UI 渲染 (保持不变)
+    // // =================================================================
+    // @SpirePatch(clz = AbstractCard.class, method = "render", paramtypez = {
+    // SpriteBatch.class })
+    // public static class RenderHitCount {
+    // @SpirePostfixPatch
+    // public static void Postfix(AbstractCard __instance, SpriteBatch sb) {
+    // AbstractPlayer p = AbstractDungeon.player;
+    // if (shouldFragment(p, __instance) &&
+    // !CardFields.isFragmentedInstance.get(__instance)) {
+    // int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
+    // int totalHits = 1 + fragLvl;
+    // if (totalHits > 1) {
+    // FontHelper.renderRotatedText(sb, FontHelper.cardEnergyFont_L, "x" +
+    // totalHits,
+    // __instance.current_x, __instance.current_y,
+    // 130.0F * __instance.drawScale * Settings.scale,
+    // 180.0F * __instance.drawScale * Settings.scale,
+    // __instance.angle, true, Settings.GOLD_COLOR);
+    // }
+    // }
+    // }
+    // }
     // =================================================================
-    // 5. UI 渲染 (保持不变)
+    // 5. UI 渲染 (显示 xN)
     // =================================================================
     @SpirePatch(clz = AbstractCard.class, method = "render", paramtypez = { SpriteBatch.class })
     public static class RenderHitCount {
         @SpirePostfixPatch
         public static void Postfix(AbstractCard __instance, SpriteBatch sb) {
             AbstractPlayer p = AbstractDungeon.player;
+
+            // 1. 基本条件检查 (Power, Attack, etc)
+            // 注意：这里我们手动检查 hand，而不完全依赖 shouldFragment
+            // 因为 shouldFragment 为了伤害计算允许了 Limbo，但渲染我们只想限死在 Hand
+            if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
+                return;
+
+            // 【关键修改】严格检查：卡牌必须在玩家的手牌(Hand)中
+            if (!p.hand.contains(__instance)) {
+                return;
+            }
+
+            // 再次确认是符合条件的攻击牌
             if (shouldFragment(p, __instance) && !CardFields.isFragmentedInstance.get(__instance)) {
                 int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
                 int totalHits = 1 + fragLvl;
+
                 if (totalHits > 1) {
                     FontHelper.renderRotatedText(sb, FontHelper.cardEnergyFont_L, "x" + totalHits,
                             __instance.current_x, __instance.current_y,

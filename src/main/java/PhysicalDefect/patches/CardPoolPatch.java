@@ -62,7 +62,7 @@ public class CardPoolPatch {
 
             "Zap", "Tempest", "Coolheaded", "Chill", "Glacier", "Rainbow", "Chaos", "Darkness", "Consume",
 
-            "Creative AI", "Hello World", "Storm", "Static Discharge", "Electrodynamics", "Defragment",
+            "Creative AI", "Hello World", "Storm", "Static Discharge", "Electrodynamics",
             "Biased Cognition"));
 
     private static final Set<String> RELIC_BLACKLIST = new HashSet<>(Arrays.asList(

@@ -11,14 +11,6 @@ import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.localization.CardStrings;
-// import com.megacrit.cardcrawl.localization.CharacterStrings;
-// import com.megacrit.cardcrawl.localization.EventStrings;
-// import com.megacrit.cardcrawl.localization.MonsterStrings;
-// import com.megacrit.cardcrawl.localization.OrbStrings;
-// import com.megacrit.cardcrawl.localization.PotionStrings;
-// import com.megacrit.cardcrawl.localization.PowerStrings;
-// import com.megacrit.cardcrawl.localization.RelicStrings;
-// import com.megacrit.cardcrawl.localization.UIStrings;
 import com.megacrit.cardcrawl.localization.CharacterStrings;
 import com.megacrit.cardcrawl.localization.OrbStrings;
 import com.megacrit.cardcrawl.localization.PowerStrings;
@@ -33,9 +25,14 @@ import basemod.ModPanel;
 import basemod.helpers.RelicType;
 import basemod.interfaces.EditCardsSubscriber;
 import basemod.interfaces.EditCharactersSubscriber;
+import basemod.interfaces.EditKeywordsSubscriber;
 import basemod.interfaces.EditRelicsSubscriber;
 import basemod.interfaces.EditStringsSubscriber;
 import basemod.interfaces.PostInitializeSubscriber;
+
+import com.badlogic.gdx.Gdx;
+import com.google.gson.Gson;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Hello world!
@@ -44,7 +41,11 @@ import basemod.interfaces.PostInitializeSubscriber;
 
 @SpireInitializer
 public class PhysicalDefect
-        implements EditCardsSubscriber, EditStringsSubscriber, EditCharactersSubscriber, EditRelicsSubscriber,
+        implements EditCardsSubscriber,
+        EditStringsSubscriber,
+        EditCharactersSubscriber,
+        EditRelicsSubscriber,
+        EditKeywordsSubscriber,
         PostInitializeSubscriber {
 
     public static String makeID(String id) {
@@ -139,6 +140,29 @@ public class PhysicalDefect
 
     }
 
+    private void loadLocKeywords(Settings.GameLanguage language) {
+        String path = "localization/" + language.toString().toLowerCase() + "/";
+        Gson gson = new Gson();
+        String json = Gdx.files.internal(assetPath(path + "KeywordStrings.json"))
+                .readString(String.valueOf(StandardCharsets.UTF_8));
+        Keyword[] keywords = gson.fromJson(json, Keyword[].class);
+
+        if (keywords != null) {
+            for (Keyword keyword : keywords) {
+                BaseMod.addKeyword("physicaldefect", keyword.PROPER_NAME, keyword.NAMES, keyword.DESCRIPTION);
+            }
+        }
+    }
+
+    @Override
+    public void receiveEditKeywords() {
+        Settings.GameLanguage language = languageSupport();
+        loadLocKeywords(Settings.GameLanguage.ENG);
+        if (!language.equals(Settings.GameLanguage.ENG)) {
+            loadLocKeywords(language);
+        }
+    }
+
     @Override
     public void receiveEditRelics() {
         BaseMod.addRelic(new BackupBattery(), RelicType.SHARED);
@@ -196,6 +220,12 @@ public class PhysicalDefect
         // 注册到 BaseMod (你需要准备一张 badge.png 图片作为 Mod 图标)
         Texture badgeTexture = new Texture(assetPath("/img/badge.png"));
         BaseMod.registerModBadge(badgeTexture, MOD_ID, AUTHOR, DESCRIPTION, settingsPanel);
+    }
+
+    public static class Keyword {
+        public String PROPER_NAME;
+        public String[] NAMES;
+        public String DESCRIPTION;
     }
 
 }

@@ -1,0 +1,9 @@
+{
+    "PhysicalDefect:FragmentationPower": {
+        "NAME": "Fragmentation",
+        "DESCRIPTIONS": [
+            "Your #yAttacks are split into 1+",
+            " hits of #yFragmention damage, targeting random enemies."
+        ]
+    }
+}

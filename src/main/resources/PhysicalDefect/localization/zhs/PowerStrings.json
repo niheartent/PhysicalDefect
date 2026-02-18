@@ -1,0 +1,9 @@
+{
+    "PhysicalDefect:FragmentationPower": {
+        "NAME": "碎片化",
+        "DESCRIPTIONS": [
+            "你的 #y攻击 将被拆分为1+",
+            "段 #y碎片化 伤害，攻击随机目标。"
+        ]
+    }
+}

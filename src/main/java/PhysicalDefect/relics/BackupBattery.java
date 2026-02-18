@@ -34,7 +34,7 @@ public class BackupBattery extends CustomRelic {
     @Override
     public void atTurnStart() {
         // 检查是否是第 2 回合
-        if (AbstractDungeon.actionManager.turn == 2) {
+        if (AbstractDungeon.actionManager.turn == 1) {
             this.flash(); // 遗物闪烁特效
 
             // 1. 播放球体闪烁视觉效果

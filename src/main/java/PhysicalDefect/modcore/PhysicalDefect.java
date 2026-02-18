@@ -20,6 +20,7 @@ import com.megacrit.cardcrawl.localization.CardStrings;
 // import com.megacrit.cardcrawl.localization.RelicStrings;
 // import com.megacrit.cardcrawl.localization.UIStrings;
 import com.megacrit.cardcrawl.localization.CharacterStrings;
+import com.megacrit.cardcrawl.localization.OrbStrings;
 import com.megacrit.cardcrawl.localization.RelicStrings;
 import com.megacrit.cardcrawl.localization.UIStrings;
 
@@ -120,6 +121,8 @@ public class PhysicalDefect
         BaseMod.loadCustomStringsFile(UIStrings.class, assetPath(path +
                 "UIStrings.json"));
 
+        BaseMod.loadCustomStringsFile(OrbStrings.class, assetPath(path +
+                "OrbStrings.json"));
         // BaseMod.loadCustomStringsFile(EventStrings.class, assetPath(path +
         // "EventStrings.json"));
 
@@ -131,8 +134,6 @@ public class PhysicalDefect
         // BaseMod.loadCustomStringsFile(PowerStrings.class, assetPath(path +
         // "PowerStrings.json"));
 
-        // BaseMod.loadCustomStringsFile(OrbStrings.class, assetPath(path +
-        // "OrbStrings.json"));
     }
 
     @Override

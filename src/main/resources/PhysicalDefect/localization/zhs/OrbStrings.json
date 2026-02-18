@@ -1,0 +1,11 @@
+{
+    "PhysicalDefect:SensorOrb": {
+        "NAME": "传感器",
+        "DESCRIPTION": [
+            "回合开始时，抽 #b",
+            " 张牌。",
+            " NL #y激发： 抽 #b",
+            " 张牌。"
+        ]
+    }
+}

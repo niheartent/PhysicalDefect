@@ -3,7 +3,7 @@
         "NAME": "BackupBattery",
         "FLAVOR": "Backup Battery!!!!!!!!",
         "DESCRIPTIONS": [
-            "At the start of each combat, #yChannel #b1 #yPlasma."
+            "At the second turn of each combat, NL #yChannel #b1 #yPlasma."
         ]
     }
 }

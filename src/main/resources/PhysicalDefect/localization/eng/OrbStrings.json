@@ -1,0 +1,11 @@
+{
+    "PhysicalDefect:SensorOrb": {
+        "NAME": "Sensor",
+        "DESCRIPTION": [
+            "At the start of turns draw #b",
+            " cards",
+            " NL #yEvoke: draw #b",
+            " cards"
+        ]
+    }
+}

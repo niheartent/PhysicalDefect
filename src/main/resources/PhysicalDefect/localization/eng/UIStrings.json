@@ -1,7 +1,7 @@
 {
   "PhysicalDefect:Config": {
     "TEXT": [
-      "Enable Negative Focus Scattering mechanism. \nOtherwise, Negative Focus will only act as a negative effect that reduces Charge Orb values."
+      "Enable Fragmentation mechanism."
     ]
   },
   "PhysicalDefect:DefragmentPatch": {

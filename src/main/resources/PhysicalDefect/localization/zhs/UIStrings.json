@@ -1,7 +1,7 @@
 {
     "PhysicalDefect:Config": {
         "TEXT": [
-            "启用负集中散射机制 \n否则负集中将仅作为降低充能球数值的负面效果。"
+            "启用碎片化机制"
         ]
     },
     "PhysicalDefect:DefragmentPatch": {

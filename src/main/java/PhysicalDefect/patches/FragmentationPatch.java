@@ -17,6 +17,7 @@ import com.megacrit.cardcrawl.powers.AbstractPower;
 import PhysicalDefect.actions.FragmentationAction;
 import PhysicalDefect.powers.FragmentationPower;
 import PhysicalDefect.characters.MyPhysicalDefect;
+import PhysicalDefect.modcore.PhysicalDefect;
 import basemod.ReflectionHacks;
 
 public class FragmentationPatch {
@@ -43,17 +44,12 @@ public class FragmentationPatch {
     // =================================================================
     // 1. 核心判定与公式
     // =================================================================
-    // private static boolean shouldFragment(AbstractPlayer p, AbstractCard card) {
-    // if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
-    // return false;
-    // if (card.type != AbstractCard.CardType.ATTACK)
-    // return false;
-    // boolean isAoe = ReflectionHacks.getPrivate(card, AbstractCard.class,
-    // "isMultiDamage");
-    // return !isAoe && card.damageTypeForTurn == DamageInfo.DamageType.NORMAL;
-    // }
-    // 原有的判定方法增加位置检查
     private static boolean shouldFragment(AbstractPlayer p, AbstractCard card) {
+
+        Boolean enable = PhysicalDefect.enableNegativeFocus;
+        if (!enable) {
+            return false;
+        }
         // 1. 基础检查：必须有玩家、有能力、是攻击牌
         if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
             return false;
@@ -96,6 +92,10 @@ public class FragmentationPatch {
     public static class FocusLossListener {
         @SpirePrefixPatch
         public static void Prefix(ApplyPowerAction __instance) {
+            Boolean enable = PhysicalDefect.enableNegativeFocus;
+            if (!enable) {
+                return;
+            }
             // 【修复】首先检查这个 Action 实例是否已经处理过
             if (ActionFields.hasTriggeredFocusLoss.get(__instance)) {
                 return;
@@ -202,30 +202,6 @@ public class FragmentationPatch {
         }
     }
 
-    // // =================================================================
-    // // 5. UI 渲染 (保持不变)
-    // // =================================================================
-    // @SpirePatch(clz = AbstractCard.class, method = "render", paramtypez = {
-    // SpriteBatch.class })
-    // public static class RenderHitCount {
-    // @SpirePostfixPatch
-    // public static void Postfix(AbstractCard __instance, SpriteBatch sb) {
-    // AbstractPlayer p = AbstractDungeon.player;
-    // if (shouldFragment(p, __instance) &&
-    // !CardFields.isFragmentedInstance.get(__instance)) {
-    // int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
-    // int totalHits = 1 + fragLvl;
-    // if (totalHits > 1) {
-    // FontHelper.renderRotatedText(sb, FontHelper.cardEnergyFont_L, "x" +
-    // totalHits,
-    // __instance.current_x, __instance.current_y,
-    // 130.0F * __instance.drawScale * Settings.scale,
-    // 180.0F * __instance.drawScale * Settings.scale,
-    // __instance.angle, true, Settings.GOLD_COLOR);
-    // }
-    // }
-    // }
-    // }
     // =================================================================
     // 5. UI 渲染 (显示 xN)
     // =================================================================
@@ -269,6 +245,10 @@ public class FragmentationPatch {
     public static class ArtifactBypass {
         @SpirePrefixPatch
         public static void Prefix(ApplyPowerAction __instance) {
+            Boolean enable = PhysicalDefect.enableNegativeFocus;
+            if (!enable) {
+                return;
+            }
             // 注意：这里不需要 check hasTriggeredFocusLoss，因为修改 powerType 本身就是幂等的（多次设置 BUFF 类型没副作用）
             // 如果你想严格一点也可以加上检查
             AbstractPower powerToApply = ReflectionHacks.getPrivate(__instance, ApplyPowerAction.class, "powerToApply");

@@ -6,8 +6,9 @@
   },
   "PhysicalDefect:DefragmentPatch": {
     "TEXT": [
-      " NL Consume all physicaldefect:Fragmentation : Double Dexterity.",
-      " NL Dexterity reset to 0 if negative."
+      " NL Consume all physicaldefect:Fragmentation : ",
+      " NL Gain Dexterity equal to its stacks, ",
+      " NL Double Dexterity. "
     ]
   },
   "PhysicalDefect:AlmightyBonus": {

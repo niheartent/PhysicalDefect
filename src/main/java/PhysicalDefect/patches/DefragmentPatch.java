@@ -18,82 +18,113 @@ import PhysicalDefect.modcore.PhysicalDefect;
 import PhysicalDefect.powers.FragmentationPower;
 
 public class DefragmentPatch {
-    private static final UIStrings UIStrings = CardCrawlGame.languagePack
-            .getUIString(PhysicalDefect.makeID("DefragmentPatch"));
+
+    // =================================================================
+    // 🌟 核心：统一的描述重建方法，防止无限追加或被覆盖
+    // =================================================================
+    public static void rebuildDescription(Defragment card) {
+        if (PhysicalDefect.shouldAddDescription()) {
+            UIStrings uiStrings = CardCrawlGame.languagePack.getUIString(PhysicalDefect.makeID("DefragmentPatch"));
+            // 增加 length >= 3 的安全检查，防止读取越界
+            if (uiStrings != null && uiStrings.TEXT != null && uiStrings.TEXT.length >= 3) {
+                // 1. 获取原版最纯净的基础描述
+                String baseDesc = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
+
+                // 2. 根据是否升级，拼接不同的三段式文本
+                if (card.upgraded) {
+                    // 升级版：原版 + [消耗碎片化] + [获得1敏捷] + [敏捷翻倍]
+                    card.rawDescription = baseDesc + uiStrings.TEXT[0] + uiStrings.TEXT[1] + uiStrings.TEXT[2];
+                } else {
+                    // 基础版：原版 + [消耗碎片化] + [敏捷翻倍] (跳过 TEXT[1])
+                    card.rawDescription = baseDesc + uiStrings.TEXT[0] + uiStrings.TEXT[2];
+                }
+
+                card.initializeDescription();
+            }
+        } else {
+            // 如果玩家在设置里关掉了机制，恢复原版描述
+            card.rawDescription = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
+            card.initializeDescription();
+        }
+    }
 
     // =================================================================
     // 1. 基础描述 (Constructor)
     // =================================================================
     @SpirePatch(clz = Defragment.class, method = SpirePatch.CONSTRUCTOR)
     public static class AppendBaseDescription {
-
         @SpirePostfixPatch
         public static void Postfix(Defragment __instance) {
-            if (PhysicalDefect.shouldAddDescription()) {
-                // 默认追加基础描述
-                __instance.rawDescription += UIStrings.TEXT[0];
-
-                // 如果生成出来直接就是升级版（比如通过卡牌生成器），需要补上升级描述
-                if (__instance.upgraded) {
-                    __instance.rawDescription += UIStrings.TEXT[0] + UIStrings.TEXT[1];
-                }
-                __instance.initializeDescription();
-            }
+            rebuildDescription(__instance);
         }
     }
 
     // =================================================================
     // 2. 升级描述 (Upgrade Logic)
     // =================================================================
-    // 监听 upgrade 方法，当玩家在火堆升级或通过事件升级时，实时更新文本
     @SpirePatch(clz = Defragment.class, method = "upgrade")
     public static class UpdateDescriptionOnUpgrade {
         @SpirePostfixPatch
         public static void Postfix(Defragment __instance) {
-            if (PhysicalDefect.shouldAddDescription()) {
-                // 防止重复添加（虽然 upgrade 通常只调一次，但为了安全）
-                if (!__instance.rawDescription.contains(UIStrings.TEXT[1])) {
-                    __instance.rawDescription += UIStrings.TEXT[1];
-                    __instance.initializeDescription();
-                }
-            }
+            rebuildDescription(__instance);
         }
     }
 
     // =================================================================
-    // 3. 实现卡牌效果 (Effect Logic)
+    // 3. 拦截底层卡牌复制
+    // =================================================================
+    @SpirePatch(clz = AbstractCard.class, method = "makeStatEquivalentCopy")
+    public static class FixDescriptionOnCopy {
+        @SpirePostfixPatch
+        public static AbstractCard Postfix(AbstractCard __result) {
+            // 只要复制出来的卡是碎片整理，就强制重新刷一遍描述
+            if (__result instanceof Defragment) {
+                rebuildDescription((Defragment) __result);
+            }
+            return __result;
+        }
+    }
+
+    // =================================================================
+    // 4. 实现卡牌效果 (Effect Logic) - 保持你的原逻辑不变
     // =================================================================
     @SpirePatch(clz = Defragment.class, method = "use")
     public static class ExtraEffect {
         @SpirePostfixPatch
         public static void Postfix(Defragment __instance, AbstractPlayer p, AbstractMonster m) {
 
-            // 1. 检查是否有【碎片化】BUFF
-            if (p.hasPower(FragmentationPower.POWER_ID)) {
+            // 1. 获取【碎片化】BUFF
+            AbstractPower fragPower = p.getPower(FragmentationPower.POWER_ID);
+
+            if (fragPower != null) {
+                // 提前记录要消耗的碎片化层数
+                int fragStacks = fragPower.amount;
 
                 AbstractPower dexPower = p.getPower("Dexterity");
                 int currentDex = (dexPower != null) ? dexPower.amount : 0;
 
                 // 2. 逻辑分流
-                if (currentDex > 0) {
-                    // 情况A：正敏捷 -> 直接翻倍 (无论是否升级)
-                    AbstractDungeon.actionManager.addToBottom(
-                            new ApplyPowerAction(p, p, new DexterityPower(p, currentDex), currentDex));
-                } else if (currentDex < 0) {
-                    // 情况B：负敏捷
-                    if (__instance.upgraded) {
-                        // 只有【升级后】才执行归零逻辑
+                if (__instance.upgraded) {
+
+                    if (fragStacks > 0) {
                         AbstractDungeon.actionManager.addToBottom(
-                                new ApplyPowerAction(p, p, new DexterityPower(p, Math.abs(currentDex)),
-                                        Math.abs(currentDex)));
-                    } else {
-                        // 【未升级】：负敏捷不处理（或者你可以选择翻倍负面效果，但通常不建议）
-                        // 这里我们选择 "什么都不做"，仅仅是消耗了碎片化但没有敏捷收益
-                        // 这让升级变得更有意义
+                                new ApplyPowerAction(p, p, new DexterityPower(p, fragStacks), fragStacks));
+                    }
+
+                    int newDex = currentDex + fragStacks;
+
+                    if (newDex > 0) {
+                        AbstractDungeon.actionManager.addToBottom(
+                                new ApplyPowerAction(p, p, new DexterityPower(p, newDex), newDex));
+                    }
+                } else {
+                    if (currentDex > 0) {
+                        AbstractDungeon.actionManager.addToBottom(
+                                new ApplyPowerAction(p, p, new DexterityPower(p, currentDex), currentDex));
                     }
                 }
 
-                // 3. 消耗所有【碎片化】
+                // 3. 彻底消耗所有【碎片化】
                 AbstractDungeon.actionManager.addToBottom(
                         new RemoveSpecificPowerAction(p, p, FragmentationPower.POWER_ID));
             }

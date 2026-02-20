@@ -50,7 +50,7 @@ public class FragmentationPatch {
     // =================================================================
     private static boolean shouldFragment(AbstractPlayer p, AbstractCard card) {
 
-        Boolean enable = PhysicalDefect.enableNegativeFocus;
+        Boolean enable = PhysicalDefect.enableFragmentation;
         if (!enable) {
             return false;
         }
@@ -96,7 +96,7 @@ public class FragmentationPatch {
     public static class FocusLossListener {
         @SpirePrefixPatch
         public static void Prefix(ApplyPowerAction __instance) {
-            Boolean enable = PhysicalDefect.enableNegativeFocus;
+            Boolean enable = PhysicalDefect.enableFragmentation;
             if (!enable) {
                 return;
             }
@@ -257,7 +257,7 @@ public class FragmentationPatch {
     public static class ArtifactBypass {
         @SpirePrefixPatch
         public static void Prefix(ApplyPowerAction __instance) {
-            Boolean enable = PhysicalDefect.enableNegativeFocus;
+            Boolean enable = PhysicalDefect.enableFragmentation;
             if (!enable) {
                 return;
             }
@@ -273,17 +273,4 @@ public class FragmentationPatch {
         }
     }
 
-    // // =================================================================
-    // // 7. 连击逻辑修复
-    // // =================================================================
-    // public static final java.util.HashSet<String> ALMIGHTY_BLACKLIST = new
-    // java.util.HashSet<>(java.util.Arrays.asList(
-    // "Gash", // 爪击
-    // "Rampage" // 暴走 (战士的卡，如果你允许跨职业抓牌的话)
-    // // 未来如果设计了其他永久成长的卡，直接把 ID 加到这里就行
-    // ));
-
-    // public static boolean isAlmightyBlacklisted(String cardID) {
-    // return ALMIGHTY_BLACKLIST.contains(cardID);
-    // }
 }

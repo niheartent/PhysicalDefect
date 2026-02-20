@@ -31,7 +31,7 @@ public class CardPoolPatch {
             filterRelicPool(AbstractDungeon.bossRelicPool, RELIC_BLACKLIST);
             filterRelicPool(AbstractDungeon.shopRelicPool, RELIC_BLACKLIST);
             // 碎片化相关
-            Boolean enable = PhysicalDefect.enableNegativeFocus;
+            Boolean enable = PhysicalDefect.enableFragmentation;
             if (!enable) {
                 filterAllCard(SPECIAL_CARD_BLACKLIST);
                 filterAllCard(NEW_CARD_BLACKLIST);

@@ -61,7 +61,7 @@ public class PhysicalDefect
     }
 
     public static boolean shouldAddDescription() {
-        return PhysicalDefect.enableNegativeFocus &&
+        return PhysicalDefect.enableFragmentation &&
                 AbstractDungeon.player instanceof MyPhysicalDefect;
     }
 
@@ -71,7 +71,7 @@ public class PhysicalDefect
     public static final String DESCRIPTION = "The 4TH Favorite Character";
     @SpireEnum
     public static AbstractPlayer.PlayerClass THE_PHYSICAL_DEFECT;
-    public static boolean enableNegativeFocus = false;
+    public static boolean enableFragmentation = false;
     public static SpireConfig modConfig;
 
     public PhysicalDefect() {
@@ -185,7 +185,7 @@ public class PhysicalDefect
             // "PhysicalDefect" 是文件名，"config" 是文件后缀
             modConfig = new SpireConfig("PhysicalDefect", "config", defaults);
 
-            enableNegativeFocus = modConfig.getBool("enableNegativeFocus");
+            enableFragmentation = modConfig.getBool("enableNegativeFocus");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -210,14 +210,14 @@ public class PhysicalDefect
                 700.0f, // y 坐标
                 Settings.CREAM_COLOR,
                 FontHelper.charDescFont,
-                enableNegativeFocus, // 初始状态
+                enableFragmentation, // 初始状态
                 settingsPanel,
                 (label) -> {
                 }, // hover 逻辑
                 (button) -> { // 点击逻辑
-                    enableNegativeFocus = button.enabled;
+                    enableFragmentation = button.enabled;
                     try {
-                        modConfig.setBool("enableNegativeFocus", enableNegativeFocus);
+                        modConfig.setBool("enableNegativeFocus", enableFragmentation);
                         modConfig.save();
                     } catch (Exception e) {
                         e.printStackTrace();

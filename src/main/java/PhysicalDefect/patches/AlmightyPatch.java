@@ -6,29 +6,44 @@ import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.blue.Claw;
 import com.megacrit.cardcrawl.cards.red.Rampage;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.localization.UIStrings;
-import PhysicalDefect.characters.MyPhysicalDefect;
+
 import PhysicalDefect.modcore.PhysicalDefect;
 
 public class AlmightyPatch {
 
     // =================================================================
-    // 7. 连击逻辑修复
+    // 7. 连击逻辑修复 (黑名单保持不变)
     // =================================================================
     public static final java.util.HashSet<String> ALMIGHTY_BLACKLIST = new java.util.HashSet<>(java.util.Arrays.asList(
             "Gash", // 爪击
-            "Rampage" // 暴走 (战士的卡，如果你允许跨职业抓牌的话)
-    // 未来如果设计了其他永久成长的卡，直接把 ID 加到这里就行
+            "Rampage" // 暴走
     ));
 
     public static boolean isAlmightyBlacklisted(String cardID) {
         return ALMIGHTY_BLACKLIST.contains(cardID);
     }
 
-    // 获取本地化 UI 文本
-    private static final UIStrings UIStrings = CardCrawlGame.languagePack
-            .getUIString(PhysicalDefect.makeID("AlmightyBonus"));
+    // =================================================================
+    // 🌟 核心：统一的描述重建方法
+    // =================================================================
+    public static void rebuildDescription(AbstractCard card) {
+        if (PhysicalDefect.shouldAddDescription()) {
+            // 动态获取 UI 文本，防止空指针异常
+            UIStrings uiStrings = CardCrawlGame.languagePack.getUIString(PhysicalDefect.makeID("AlmightyBonus"));
+
+            if (uiStrings != null && uiStrings.TEXT != null) {
+
+                String baseDesc = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
+                card.rawDescription = baseDesc + uiStrings.TEXT[0];
+                card.initializeDescription();
+            }
+        } else {
+
+            card.rawDescription = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
+            card.initializeDescription();
+        }
+    }
 
     // =================================================================
     // 1. 拦截爪击 (Claw / Gash)
@@ -37,11 +52,7 @@ public class AlmightyPatch {
     public static class ClawConstructorPatch {
         @SpirePostfixPatch
         public static void Postfix(Claw __instance) {
-            if (PhysicalDefect.shouldAddDescription()) {
-                // 直接追加描述并刷新
-                __instance.rawDescription += UIStrings.TEXT[0];
-                __instance.initializeDescription();
-            }
+            rebuildDescription(__instance);
         }
     }
 
@@ -49,25 +60,18 @@ public class AlmightyPatch {
     public static class ClawUpgradePatch {
         @SpirePostfixPatch
         public static void Postfix(Claw __instance) {
-            // 升级后如果文本消失了（原版upgrade可能会重置rawDescription），重新补上
-            if (PhysicalDefect.shouldAddDescription() && !__instance.rawDescription.contains(UIStrings.TEXT[0])) {
-                __instance.rawDescription += UIStrings.TEXT[0];
-                __instance.initializeDescription();
-            }
+            rebuildDescription(__instance);
         }
     }
 
     // =================================================================
-    // 2. 拦截狂暴 (Rampage)
+    // 2. 拦截暴走 (Rampage)
     // =================================================================
     @SpirePatch(clz = Rampage.class, method = SpirePatch.CONSTRUCTOR)
     public static class RampageConstructorPatch {
         @SpirePostfixPatch
         public static void Postfix(Rampage __instance) {
-            if (PhysicalDefect.shouldAddDescription()) {
-                __instance.rawDescription += UIStrings.TEXT[0];
-                __instance.initializeDescription();
-            }
+            rebuildDescription(__instance);
         }
     }
 
@@ -75,10 +79,24 @@ public class AlmightyPatch {
     public static class RampageUpgradePatch {
         @SpirePostfixPatch
         public static void Postfix(Rampage __instance) {
-            if (PhysicalDefect.shouldAddDescription() && !__instance.rawDescription.contains(UIStrings.TEXT[0])) {
-                __instance.rawDescription += UIStrings.TEXT[0];
-                __instance.initializeDescription();
-            }
+            rebuildDescription(__instance);
         }
     }
+
+    @SpirePatch(clz = AbstractCard.class, method = "makeStatEquivalentCopy")
+    public static class FixDescriptionOnCopy {
+        @SpirePostfixPatch
+        public static AbstractCard Postfix(AbstractCard __result) {
+            if (__result instanceof com.megacrit.cardcrawl.cards.blue.Claw) {
+                AlmightyPatch.rebuildDescription(__result);
+            }
+            // 处理暴走
+            else if (__result instanceof com.megacrit.cardcrawl.cards.red.Rampage) {
+                AlmightyPatch.rebuildDescription(__result);
+            }
+
+            return __result;
+        }
+    }
+
 }

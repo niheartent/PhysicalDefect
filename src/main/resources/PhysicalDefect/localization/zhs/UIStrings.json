@@ -6,8 +6,9 @@
     },
     "PhysicalDefect:DefragmentPatch": {
         "TEXT": [
-            " NL 消耗所有  physicaldefect:碎片化 ：敏捷 翻倍。",
-            " NL 敏捷若为负则归零。"
+            " NL 消耗所有 physicaldefect:碎片化 ：",
+            " NL 获得等同于其层数的 敏捷, ",
+            " NL 敏捷 翻倍。"
         ]
     },
     "PhysicalDefect:AlmightyBonus": {

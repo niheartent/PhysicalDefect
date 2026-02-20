@@ -1,7 +1,7 @@
 {
-"PhysicalDefect:Almighty": {
-    "NAME": "Almighty",
-    "DESCRIPTION": "Ethereal. NL Unlock the full effects of your Fragmentation attacks.",
-    "UPGRADE_DESCRIPTION": "Unlock the full effects of your Fragmentation attacks."
-}
-}
+    "PhysicalDefect:Almighty": {
+      "NAME": "Almighty",
+      "DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 2 physicaldefect:Fragmentation .",
+      "UPGRADE_DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 3 physicaldefect:Fragmentation ."
+    }
+  }

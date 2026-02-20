@@ -106,7 +106,7 @@ public class FragmentationAction extends AbstractGameAction {
         // 注意：这里使用 addToTop，确保它们优先执行，且不会被怪物的受击反击动作隔开
         for (int i = this.hits - 1; i >= 0; i--) {
             AbstractDungeon.actionManager.addToTop(
-                    new FragmentSingleHitAction(this.sourceCard, this.fixedBaseDamage, i));
+                    new FragmentSingleHitAction(this.sourceCard, i));
         }
         this.isDone = true; // 派发完毕，立刻结束
     }

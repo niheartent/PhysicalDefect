@@ -35,7 +35,7 @@ public class DefragmentPatch {
 
                 // 如果生成出来直接就是升级版（比如通过卡牌生成器），需要补上升级描述
                 if (__instance.upgraded) {
-                    __instance.rawDescription += UIStrings.TEXT[1];
+                    __instance.rawDescription += UIStrings.TEXT[0] + UIStrings.TEXT[1];
                 }
                 __instance.initializeDescription();
             }

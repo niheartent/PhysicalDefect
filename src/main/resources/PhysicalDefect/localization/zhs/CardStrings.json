@@ -1,3 +1,7 @@
 {
-
+    "PhysicalDefect:Almighty": {
+        "NAME": "全能",
+        "DESCRIPTION": "虚无 。 NL 解除 碎片化 攻击的特效限制。",
+        "UPGRADE_DESCRIPTION": "解除 碎片化 攻击的特效限制。"
+    }
 }

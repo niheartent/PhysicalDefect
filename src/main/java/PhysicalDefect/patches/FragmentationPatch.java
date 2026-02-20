@@ -3,6 +3,7 @@ package PhysicalDefect.patches;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
+import com.megacrit.cardcrawl.actions.defect.GashAction;
 import com.megacrit.cardcrawl.actions.utility.UseCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
@@ -18,7 +19,9 @@ import PhysicalDefect.actions.FragmentationAction;
 import PhysicalDefect.powers.FragmentationPower;
 import PhysicalDefect.characters.MyPhysicalDefect;
 import PhysicalDefect.modcore.PhysicalDefect;
+import PhysicalDefect.patches.FragmentationPatch.CardFields;
 import basemod.ReflectionHacks;
+import javassist.CtBehavior;
 
 public class FragmentationPatch {
 
@@ -28,6 +31,7 @@ public class FragmentationPatch {
     @SpirePatch(clz = AbstractCard.class, method = SpirePatch.CLASS)
     public static class CardFields {
         public static SpireField<Boolean> isFragmentedInstance = new SpireField<>(() -> false);
+        public static SpireField<Integer> snapshotDamage = new SpireField<>(() -> 0);
     }
 
     @SpirePatch(clz = AbstractPlayer.class, method = SpirePatch.CLASS)
@@ -135,26 +139,42 @@ public class FragmentationPatch {
     // =================================================================
     // 3. 伤害数值修改 (保持不变)
     // =================================================================
+
+    private static void applySplitLogic(AbstractCard card) {
+        AbstractPlayer p = AbstractDungeon.player;
+
+        // 1. 基础检查
+        if (!shouldFragment(p, card))
+            return;
+
+        // 2. 获取层数
+        int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
+        if (fragLvl <= 0)
+            return;
+
+        // 3. 获取力量
+        int strength = 0;
+        if (p.hasPower("Strength")) {
+            strength = p.getPower("Strength").amount;
+        }
+
+        // 4. 计算并应用
+        // 注意：calculateCardDamage 和 applyPowers 调用时，card.damage 已经被原版逻辑计算过一次（包含力量了）
+        // 我们的 calculateSplitDamage 会先扣除力量，除以N，再加回力量
+        int newDamage = calculateSplitDamage(card.damage, fragLvl, strength);
+
+        if (card.damage != newDamage) {
+            card.damage = newDamage;
+            card.isDamageModified = true;
+        }
+    }
+
     @SpirePatch(clz = AbstractCard.class, method = "calculateCardDamage")
     public static class DamageMath {
         @SpirePostfixPatch
         public static void Postfix(AbstractCard __instance, AbstractMonster mo) {
-            AbstractPlayer p = AbstractDungeon.player;
-            if (!shouldFragment(p, __instance))
-                return;
-            int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
-            if (fragLvl <= 0)
-                return;
-
-            int strength = 0;
-            if (p.hasPower("Strength"))
-                strength = p.getPower("Strength").amount;
-
-            int newDamage = calculateSplitDamage(__instance.damage, fragLvl, strength);
-            if (__instance.damage != newDamage) {
-                __instance.damage = newDamage;
-                __instance.isDamageModified = true;
-            }
+            // 直接调用公共方法
+            applySplitLogic(__instance);
         }
     }
 
@@ -162,22 +182,10 @@ public class FragmentationPatch {
     public static class DamageDisplayMath {
         @SpirePostfixPatch
         public static void Postfix(AbstractCard __instance) {
-            AbstractPlayer p = AbstractDungeon.player;
-            if (!shouldFragment(p, __instance))
-                return;
-            int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
-            if (fragLvl <= 0)
-                return;
+            // 直接调用公共方法
 
-            int strength = 0;
-            if (p.hasPower("Strength"))
-                strength = p.getPower("Strength").amount;
-
-            int newDamage = calculateSplitDamage(__instance.damage, fragLvl, strength);
-            if (__instance.damage != newDamage) {
-                __instance.damage = newDamage;
-                __instance.isDamageModified = true;
-            }
+            applySplitLogic(__instance);
+            CardFields.snapshotDamage.set(__instance, __instance.damage);
         }
     }
 
@@ -188,7 +196,8 @@ public class FragmentationPatch {
             AbstractCreature.class })
     public static class TriggerFragmentAttack {
         @SpirePrefixPatch
-        public static void Prefix(UseCardAction __instance, AbstractCard card, AbstractCreature target) {
+        public static void Prefix(UseCardAction __instance, AbstractCard card,
+                AbstractCreature target) {
             if (CardFields.isFragmentedInstance.get(card))
                 return;
             AbstractPlayer p = AbstractDungeon.player;
@@ -197,7 +206,10 @@ public class FragmentationPatch {
 
             int fragLvl = p.getPower(FragmentationPower.POWER_ID).amount;
             if (fragLvl > 0) {
-                AbstractDungeon.actionManager.addToBottom(new FragmentationAction(card, fragLvl));
+
+                AbstractDungeon.actionManager
+                        .addToBottom(new FragmentationAction(card, fragLvl,
+                                CardFields.snapshotDamage.get(card)));
             }
         }
     }
@@ -260,4 +272,18 @@ public class FragmentationPatch {
             }
         }
     }
+
+    // // =================================================================
+    // // 7. 连击逻辑修复
+    // // =================================================================
+    // public static final java.util.HashSet<String> ALMIGHTY_BLACKLIST = new
+    // java.util.HashSet<>(java.util.Arrays.asList(
+    // "Gash", // 爪击
+    // "Rampage" // 暴走 (战士的卡，如果你允许跨职业抓牌的话)
+    // // 未来如果设计了其他永久成长的卡，直接把 ID 加到这里就行
+    // ));
+
+    // public static boolean isAlmightyBlacklisted(String cardID) {
+    // return ALMIGHTY_BLACKLIST.contains(cardID);
+    // }
 }

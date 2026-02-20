@@ -17,6 +17,7 @@ import com.megacrit.cardcrawl.cards.blue.Strike_Blue;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.EnergyManager;
+import com.megacrit.cardcrawl.cutscenes.CutscenePanel;
 import com.megacrit.cardcrawl.events.beyond.SpireHeart;
 import com.megacrit.cardcrawl.events.city.Vampires;
 import com.megacrit.cardcrawl.helpers.FontHelper;
@@ -240,5 +241,21 @@ public class MyPhysicalDefect extends CustomPlayer {
     @Override
     public AbstractCard getStartCardForEvent() {
         return new Strike_Blue();
+    }
+
+    // =================================================================
+    // 2. 修改碎心通关漫画 (打败心脏后的 3 张分镜)
+    // =================================================================
+    @Override
+    public java.util.List<CutscenePanel> getCutscenePanels() {
+        java.util.List<CutscenePanel> panels = new java.util.ArrayList<>();
+
+        // 故障机器人的原版三格漫画。
+        // 第一个分镜附带了机器人专属的“发射激光”音效 (ATTACK_DEFECT_BEAM)
+        panels.add(new CutscenePanel("images/scenes/defect1.png", "ATTACK_DEFECT_BEAM"));
+        panels.add(new CutscenePanel("images/scenes/defect2.png"));
+        panels.add(new CutscenePanel("images/scenes/defect3.png"));
+
+        return panels;
     }
 }

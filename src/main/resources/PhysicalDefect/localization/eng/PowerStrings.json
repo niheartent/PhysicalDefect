@@ -3,7 +3,13 @@
         "NAME": "Fragmentation",
         "DESCRIPTIONS": [
             "Your #yAttacks are split into 1+",
-            " hits of #yFragmention damage, targeting random enemies."
+            " hits of #yFragmentation damage, targeting random enemies."
+        ]
+    },
+    "PhysicalDefect:AlmightyPower": {
+        "NAME": "Almighty",
+        "DESCRIPTIONS": [
+            "Your Fragmentation attacks now trigger their card effects."
         ]
     }
 }

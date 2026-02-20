@@ -1,3 +1,7 @@
 {
-
+"PhysicalDefect:Almighty": {
+    "NAME": "Almighty",
+    "DESCRIPTION": "Ethereal. NL Unlock the full effects of your Fragmentation attacks.",
+    "UPGRADE_DESCRIPTION": "Unlock the full effects of your Fragmentation attacks."
+}
 }

@@ -1,13 +1,18 @@
 {
     "PhysicalDefect:Config": {
         "TEXT": [
-            "启用碎片化机制"
+            "启用/关闭碎片化机制"
         ]
     },
     "PhysicalDefect:DefragmentPatch": {
         "TEXT": [
             " NL 消耗所有  physicaldefect:碎片化 ：敏捷 翻倍。",
             " NL 敏捷若为负则归零。"
+        ]
+    },
+    "PhysicalDefect:AlmightyBonus": {
+        "TEXT": [
+            " NL physicaldefect:全能 ：后续 碎片化 攻击会临时提高伤害。"
         ]
     }
 }

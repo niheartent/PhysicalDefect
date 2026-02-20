@@ -1,13 +1,18 @@
 {
   "PhysicalDefect:Config": {
     "TEXT": [
-      "Enable Fragmentation mechanism."
+      "Enable/Disable Fragmentation mechanism"
     ]
   },
   "PhysicalDefect:DefragmentPatch": {
     "TEXT": [
       " NL Consume all physicaldefect:Fragmentation : Double Dexterity.",
       " NL Dexterity reset to 0 if negative."
+    ]
+  },
+  "PhysicalDefect:AlmightyBonus": {
+    "TEXT": [
+      " NL physicaldefect:Almighty : Subsequent Fragmentation attacks gain temporary damage."
     ]
   }
 }

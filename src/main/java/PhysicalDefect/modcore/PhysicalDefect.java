@@ -6,17 +6,21 @@ import com.badlogic.gdx.graphics.Texture;
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.cutscenes.CutscenePanel;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.FontHelper;
+import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.localization.CardStrings;
 import com.megacrit.cardcrawl.localization.CharacterStrings;
 import com.megacrit.cardcrawl.localization.OrbStrings;
 import com.megacrit.cardcrawl.localization.PowerStrings;
 import com.megacrit.cardcrawl.localization.RelicStrings;
 import com.megacrit.cardcrawl.localization.UIStrings;
-
+import PhysicalDefect.cards.Almighty;
 import PhysicalDefect.characters.MyPhysicalDefect;
 import PhysicalDefect.relics.BackupBattery;
 import basemod.BaseMod;
@@ -56,6 +60,11 @@ public class PhysicalDefect
         return MOD_ID + "/" + path;
     }
 
+    public static boolean shouldAddDescription() {
+        return PhysicalDefect.enableNegativeFocus &&
+                AbstractDungeon.player instanceof MyPhysicalDefect;
+    }
+
     /*----------------------------------------模组核心----------------------------------------------- */
     public static final String MOD_ID = "PhysicalDefect";
     public static final String AUTHOR = "Nihe";
@@ -75,7 +84,7 @@ public class PhysicalDefect
 
     @Override
     public void receiveEditCards() {
-        // BaseMod.addCard(new Strike());
+        BaseMod.addCard(new Almighty());
     }
 
     private Settings.GameLanguage languageSupport() {

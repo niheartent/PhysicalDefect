@@ -4,6 +4,7 @@ import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePostfixPatch;
 import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.RemoveSpecificPowerAction;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.blue.Defragment;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
@@ -28,14 +29,16 @@ public class DefragmentPatch {
 
         @SpirePostfixPatch
         public static void Postfix(Defragment __instance) {
-            // 默认追加基础描述
-            __instance.rawDescription += UIStrings.TEXT[0];
+            if (PhysicalDefect.shouldAddDescription()) {
+                // 默认追加基础描述
+                __instance.rawDescription += UIStrings.TEXT[0];
 
-            // 如果生成出来直接就是升级版（比如通过卡牌生成器），需要补上升级描述
-            if (__instance.upgraded) {
-                __instance.rawDescription += UIStrings.TEXT[1];
+                // 如果生成出来直接就是升级版（比如通过卡牌生成器），需要补上升级描述
+                if (__instance.upgraded) {
+                    __instance.rawDescription += UIStrings.TEXT[1];
+                }
+                __instance.initializeDescription();
             }
-            __instance.initializeDescription();
         }
     }
 
@@ -47,10 +50,12 @@ public class DefragmentPatch {
     public static class UpdateDescriptionOnUpgrade {
         @SpirePostfixPatch
         public static void Postfix(Defragment __instance) {
-            // 防止重复添加（虽然 upgrade 通常只调一次，但为了安全）
-            if (!__instance.rawDescription.contains(UIStrings.TEXT[1])) {
-                __instance.rawDescription += UIStrings.TEXT[1];
-                __instance.initializeDescription();
+            if (PhysicalDefect.shouldAddDescription()) {
+                // 防止重复添加（虽然 upgrade 通常只调一次，但为了安全）
+                if (!__instance.rawDescription.contains(UIStrings.TEXT[1])) {
+                    __instance.rawDescription += UIStrings.TEXT[1];
+                    __instance.initializeDescription();
+                }
             }
         }
     }

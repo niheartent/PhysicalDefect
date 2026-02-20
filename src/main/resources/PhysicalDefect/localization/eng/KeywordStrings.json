@@ -6,5 +6,13 @@
             "Fragmentation"
         ],
         "DESCRIPTION": "Gain #b1 stack for every #b2 Focus lost. NL Your single-target #yAttacks are split into #b(1 #y+ #yStacks) hits."
+    },
+    {
+        "PROPER_NAME": "Almighty",
+        "NAMES": [
+            "Almighty",
+            "almighty"
+        ],
+        "DESCRIPTION": "Your Fragmentation attacks now trigger their card effects."
     }
 ]

@@ -5,7 +5,7 @@
         "nihe"
     ],
     "description": "故障机器人是我在《杀戮尖塔》中第四喜欢的角色。但他原版的卡池中充斥着大量球类牌，往往会卡住物理流（0费流/爪机）的启动。为了解决这个问题，我制作了这个模组。\n\nThe Defect is my 4th favorite character in Slay the Spire. However, the original card pool is flooded with Orb cards, hindering the startup of my Physical build. To address this, I created this mod.",
-    "version": "0.1.2",
+    "version": "0.1.4",
     "sts_version": "12-22-2020",
     "mts_version": "3.30.0",
     "dependencies": [

@@ -7,5 +7,12 @@
             "Fragmentation"
         ],
         "DESCRIPTION": "每减少 #b2 点 集中 获得 #b1 层。 NL 你的 #y单体攻击 将被拆解为 #b(1+层数) 段。"
+    },
+    {
+        "PROPER_NAME": "全能",
+        "NAMES": [
+            "全能"
+        ],
+        "DESCRIPTION": "解除 碎片化 攻击的特效限制"
     }
 ]

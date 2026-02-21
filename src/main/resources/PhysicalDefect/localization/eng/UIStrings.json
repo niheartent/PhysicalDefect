@@ -15,5 +15,17 @@
     "TEXT": [
       " NL physicaldefect:Almighty : Subsequent Fragmentation attacks gain temporary damage."
     ]
+  },
+  "PhysicalDefect:BiasedCognitionPatch": {
+    "TEXT": [
+      " NL Gain 1 physicaldefect:Bias.",
+      "Innate. NL "
+    ]
+  },
+  "PhysicalDefect:BiasPowerPatch": {
+    "TEXT": [
+      " NL Each hit of your #yFragmentation attacks grants ",
+      " Block"
+    ]
   }
 }

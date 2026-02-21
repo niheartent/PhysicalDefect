@@ -7,13 +7,25 @@
     "PhysicalDefect:DefragmentPatch": {
         "TEXT": [
             " NL 消耗所有 physicaldefect:碎片化 ：",
-            " NL 获得等同于其层数的 敏捷, ",
+            " NL 获得等同于层数的 敏捷 ",
             " NL 敏捷 翻倍。"
         ]
     },
     "PhysicalDefect:AlmightyBonus": {
         "TEXT": [
             " NL physicaldefect:全能 ：后续 碎片化 攻击会临时提高伤害。"
+        ]
+    },
+    "PhysicalDefect:BiasedCognitionPatch": {
+        "TEXT": [
+            " NL 获得1层 偏差 。",
+            "固有 。 NL "
+        ]
+    },
+    "PhysicalDefect:BiasPowerPatch": {
+        "TEXT": [
+            " NL 你的每段 #y碎片化 攻击额外提供",
+            "点 格挡 。"
         ]
     }
 }

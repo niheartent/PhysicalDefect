@@ -7,6 +7,7 @@ import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 
 import PhysicalDefect.patches.AlmightyPatch;
 import PhysicalDefect.patches.FragmentationPatch;
@@ -30,6 +31,11 @@ public class FragmentSingleHitAction extends AbstractGameAction {
 
         if (this.target != null && !this.target.isDeadOrEscaped()) {
             boolean isAlmighty = p.hasPower(AlmightyPower.POWER_ID);
+            AbstractPower biasPower = p.getPower("Bias");
+            if (biasPower != null && biasPower.amount > 0) {
+                // 每有一层偏差，就获得 1 点格挡。addToTop 保证在攻击的同时立刻生效。
+                addToTop(new com.megacrit.cardcrawl.actions.common.GainBlockAction(p, p, biasPower.amount));
+            }
 
             if (isAlmighty) {
                 if (AlmightyPatch.isAlmightyBlacklisted(this.cardSnapshot.cardID)) {

@@ -21,73 +21,60 @@ public class CardPoolPatch {
     // 2. 使用 PostfixPatch（在原方法运行完后再运行我们的代码）
     @SpirePostfixPatch
     public static void Postfix(AbstractDungeon __instance) {
-        // 物理机卡池过滤
-        if (AbstractDungeon.player instanceof MyPhysicalDefect) {
+        boolean isPhysicalDefect = AbstractDungeon.player instanceof MyPhysicalDefect;
+        boolean fragEnabled = PhysicalDefect.enableFragmentation;
 
-            filterAllCard(CARD_BLACKLIST);
-            filterRelicPool(AbstractDungeon.commonRelicPool, RELIC_BLACKLIST);
-            filterRelicPool(AbstractDungeon.uncommonRelicPool, RELIC_BLACKLIST);
-            filterRelicPool(AbstractDungeon.rareRelicPool, RELIC_BLACKLIST);
-            filterRelicPool(AbstractDungeon.bossRelicPool, RELIC_BLACKLIST);
-            filterRelicPool(AbstractDungeon.shopRelicPool, RELIC_BLACKLIST);
-            // 碎片化相关
-            Boolean enable = PhysicalDefect.enableFragmentation;
-            if (!enable) {
-                filterAllCard(SPECIAL_CARD_BLACKLIST);
-                filterAllCard(NEW_CARD_BLACKLIST);
+        if (isPhysicalDefect) {
+            filterAllCard(ORB_CARD_BLACKLIST);
+
+            if (!fragEnabled) {
+                filterAllCard(FRAGMENT_CORE_CARDS);
+                filterAllCard(GENERATOR_CARDS);
+            }
+        } else {
+            if (!fragEnabled) {
+                filterAllCard(ONLY_ALMIGHTY);
             }
         }
 
-        // 原版过滤
-        if (!(AbstractDungeon.player instanceof MyPhysicalDefect)) {
-            filterAllCard(NEW_CARD_BLACKLIST);
+        String charName = AbstractDungeon.player.title;
+        System.out.println("============== [" + charName + "] 卡池验证开始 ==============");
+        System.out.println("当前碎片化开关状态: " + fragEnabled);
+        System.out.println("--- 普通池 (Common) ---");
+        for (AbstractCard c : AbstractDungeon.commonCardPool.group) {
+            System.out.println("  ID: " + c.cardID);
         }
-
-        if (AbstractDungeon.player instanceof MyPhysicalDefect) {
-            // --- 插入以下验证代码 ---
-            System.out.println("=== 物理机器人卡池验证开始 ===");
-            for (AbstractCard c : AbstractDungeon.commonCardPool.group) {
-                System.out.println("普通池包含: " + c.cardID);
-            }
-            for (AbstractCard c : AbstractDungeon.uncommonCardPool.group) {
-                System.out.println("罕见池包含: " + c.cardID);
-            }
-            for (AbstractCard c : AbstractDungeon.rareCardPool.group) {
-                System.out.println("稀有池包含: " + c.cardID);
-            }
-            System.out.println("=== 物理机器人卡池验证结束 ===");
+        System.out.println("--- 罕见池 (Uncommon) ---");
+        for (AbstractCard c : AbstractDungeon.uncommonCardPool.group) {
+            System.out.println("  ID: " + c.cardID);
         }
-
+        System.out.println("--- 稀有池 (Rare) ---");
+        for (AbstractCard c : AbstractDungeon.rareCardPool.group) {
+            System.out.println("  ID: " + c.cardID);
+        }
+        System.out.println("============== 卡池验证结束 ==============");
     }
 
-    private static final Set<String> CARD_BLACKLIST = new HashSet<>(Arrays.asList(
+    // 1. 物理机永远不想见到的球类卡
+    private static final Set<String> ORB_CARD_BLACKLIST = new HashSet<>(Arrays.asList(
             "Ball Lightning", "Cold Snap", "Doom and Gloom", "Lockon", "Thunder Strike", "Blizzard", "Compile Driver",
-
             "Zap", "Tempest", "Coolheaded", "Chill", "Glacier", "Rainbow", "Chaos", "Darkness", "Consume",
+            "Storm", "Static Discharge", "Electrodynamics"));
 
-            "Creative AI", "Hello World", "Storm", "Static Discharge", "Electrodynamics",
-            "Biased Cognition"));
-    private static final Set<String> SPECIAL_CARD_BLACKLIST = new HashSet<>(Arrays.asList(
-            "Defragment"));
+    // 2. 生成类卡牌 (如果关闭机制，物理机就不需要它们了)
+    private static final Set<String> GENERATOR_CARDS = new HashSet<>(Arrays.asList(
+            "Creative AI", "Hello World"));
 
-    private static final Set<String> NEW_CARD_BLACKLIST = new HashSet<>(Arrays.asList(
+    // 3. 碎片化机制核心
+    private static final Set<String> FRAGMENT_CORE_CARDS = new HashSet<>(Arrays.asList(
+            Almighty.ID, "Defragment", "Biased Cognition"));
+
+    // 4. 仅全能
+    private static final Set<String> ONLY_ALMIGHTY = new HashSet<>(Arrays.asList(
             Almighty.ID));
-
-    private static final Set<String> RELIC_BLACKLIST = new HashSet<>(Arrays.asList(
-
-            "FrozenCore", // 冷冻核心 (替换破损核心，每回合产冰)
-            "DataDisk", // 磁盘 (开局 1 集中)
-            "Emotion Chip", // 情感芯片 (掉血激发球)
-            "Symbiotic Virus" // 共生病毒 (开局产暗球)
-    ));
 
     private static void filterCardPool(ArrayList<AbstractCard> cards, Set<String> cardBlacklist) {
         cards.removeIf(c -> cardBlacklist.contains(c.cardID));
-    }
-
-    private static void filterRelicPool(ArrayList<String> pool, Set<String> relicBlackist) {
-        // 遗物池里存的是 String 类型的 ID，直接 removeIf 即可
-        pool.removeIf(id -> relicBlackist.contains(id));
     }
 
     private static void filterAllCard(Set<String> cardBlacklist) {

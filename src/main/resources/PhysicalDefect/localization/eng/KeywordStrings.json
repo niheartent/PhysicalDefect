@@ -14,5 +14,12 @@
             "almighty"
         ],
         "DESCRIPTION": "Your Fragmentation attacks now trigger their card effects."
+    },
+    {
+        "PROPER_NAME": "Bias",
+        "NAMES": [
+            "bias"
+        ],
+        "DESCRIPTION": "At the start of your turn, lose #b1 #yFocus. NL Each hit of your #yFragmentation attacks grants #yBlock equal to this amount."
     }
 ]

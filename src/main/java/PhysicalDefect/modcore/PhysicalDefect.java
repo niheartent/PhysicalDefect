@@ -6,14 +6,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePostfixPatch;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
-import com.megacrit.cardcrawl.cutscenes.CutscenePanel;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.FontHelper;
-import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.localization.CardStrings;
 import com.megacrit.cardcrawl.localization.CharacterStrings;
 import com.megacrit.cardcrawl.localization.OrbStrings;
@@ -51,21 +51,10 @@ public class PhysicalDefect
         EditRelicsSubscriber,
         EditKeywordsSubscriber,
         PostInitializeSubscriber {
+    // =================================================================
+    // 1. 核心
+    // =================================================================
 
-    public static String makeID(String id) {
-        return MOD_ID + ":" + id;
-    }
-
-    public static String assetPath(String path) {
-        return MOD_ID + "/" + path;
-    }
-
-    public static boolean shouldAddDescription() {
-        return PhysicalDefect.enableFragmentation &&
-                AbstractDungeon.player instanceof MyPhysicalDefect;
-    }
-
-    /*----------------------------------------模组核心----------------------------------------------- */
     public static final String MOD_ID = "PhysicalDefect";
     public static final String AUTHOR = "Nihe";
     public static final String DESCRIPTION = "The 4TH Favorite Character";
@@ -73,6 +62,31 @@ public class PhysicalDefect
     public static AbstractPlayer.PlayerClass THE_PHYSICAL_DEFECT;
     public static boolean enableFragmentation = false;
     public static SpireConfig modConfig;
+
+    public static boolean shouldAddDescription() {
+        return PhysicalDefect.enableFragmentation &&
+                AbstractDungeon.player instanceof MyPhysicalDefect;
+    }
+
+    private Settings.GameLanguage languageSupport() {
+        switch (Settings.language) {
+            case ZHS:
+                return Settings.language;
+            default:
+                return Settings.GameLanguage.ENG;
+        }
+    }
+
+    public static void loadConfig() {
+        try {
+            Properties defaults = new Properties();
+            defaults.setProperty("enableNegativeFocus", "true");
+            modConfig = new SpireConfig("PhysicalDefect", "config", defaults);
+            enableFragmentation = modConfig.getBool("enableNegativeFocus");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public PhysicalDefect() {
         BaseMod.subscribe(this);
@@ -87,13 +101,15 @@ public class PhysicalDefect
         BaseMod.addCard(new Almighty());
     }
 
-    private Settings.GameLanguage languageSupport() {
-        switch (Settings.language) {
-            case ZHS:
-                return Settings.language;
-            default:
-                return Settings.GameLanguage.ENG;
-        }
+    @Override
+    public void receiveEditCharacters() {
+        String MY_CHARACTER_BUTTON = "images/ui/charSelect/defectButton.png";
+        String MY_CHARACTER_PORTRAIT = "images/ui/charSelect/defectPortrait.jpg";
+        BaseMod.addCharacter(
+                new MyPhysicalDefect(CardCrawlGame.playerName),
+                MY_CHARACTER_BUTTON,
+                MY_CHARACTER_PORTRAIT,
+                PhysicalDefect.THE_PHYSICAL_DEFECT);
     }
 
     public void receiveEditStrings() {
@@ -105,20 +121,59 @@ public class PhysicalDefect
     }
 
     @Override
-    public void receiveEditCharacters() {
-        // 1. 角色按钮图：直接引用原版故障机器人的选择按钮
-        String MY_CHARACTER_BUTTON = "images/ui/charSelect/defectButton.png";
+    public void receiveEditKeywords() {
+        Settings.GameLanguage language = languageSupport();
+        loadLocKeywords(Settings.GameLanguage.ENG);
+        if (!language.equals(Settings.GameLanguage.ENG)) {
+            loadLocKeywords(language);
+        }
+    }
 
-        // 2. 角色全屏立绘：直接引用原版故障机器人的背景图
-        String MY_CHARACTER_PORTRAIT = "images/ui/charSelect/defectPortrait.jpg";
+    @Override
+    public void receiveEditRelics() {
+        BaseMod.addRelic(new BackupBattery(), RelicType.SHARED);
+    }
 
-        // 3. 注册角色
-        // 参数含义：实例对象, 按钮路径, 立绘路径, 角色枚举ID
-        BaseMod.addCharacter(
-                new MyPhysicalDefect(CardCrawlGame.playerName),
-                MY_CHARACTER_BUTTON,
-                MY_CHARACTER_PORTRAIT,
-                PhysicalDefect.THE_PHYSICAL_DEFECT);
+    @Override
+    public void receivePostInitialize() {
+        loadConfig();
+        ModPanel settingsPanel = new ModPanel();
+        UIStrings configStrings = CardCrawlGame.languagePack.getUIString(makeID("Config"));
+        String labelText = configStrings.TEXT[0];
+        ModLabeledToggleButton enableFocusBtn = new ModLabeledToggleButton(
+                labelText,
+                350.0f, // x 坐标
+                700.0f, // y 坐标
+                Settings.CREAM_COLOR,
+                FontHelper.charDescFont,
+                enableFragmentation, // 初始状态
+                settingsPanel,
+                (label) -> {
+                }, // hover 逻辑
+                (button) -> { // 点击逻辑
+                    enableFragmentation = button.enabled;
+                    try {
+                        modConfig.setBool("enableNegativeFocus", enableFragmentation);
+                        modConfig.save();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+
+        settingsPanel.addUIElement(enableFocusBtn);
+        Texture badgeTexture = new Texture(assetPath("/img/badge.png"));
+        BaseMod.registerModBadge(badgeTexture, MOD_ID, AUTHOR, DESCRIPTION, settingsPanel);
+    }
+
+    // =================================================================
+    // 2. 本地化
+    // =================================================================
+    public static String makeID(String id) {
+        return MOD_ID + ":" + id;
+    }
+
+    public static String assetPath(String path) {
+        return MOD_ID + "/" + path;
     }
 
     private void loadLocStrings(Settings.GameLanguage language) {
@@ -149,6 +204,12 @@ public class PhysicalDefect
 
     }
 
+    public static class Keyword {
+        public String PROPER_NAME;
+        public String[] NAMES;
+        public String DESCRIPTION;
+    }
+
     private void loadLocKeywords(Settings.GameLanguage language) {
         String path = "localization/" + language.toString().toLowerCase() + "/";
         Gson gson = new Gson();
@@ -162,79 +223,41 @@ public class PhysicalDefect
             }
         }
     }
+    // =================================================================
+    // 3. UI 更新
+    // =================================================================
 
-    @Override
-    public void receiveEditKeywords() {
-        Settings.GameLanguage language = languageSupport();
-        loadLocKeywords(Settings.GameLanguage.ENG);
-        if (!language.equals(Settings.GameLanguage.ENG)) {
-            loadLocKeywords(language);
+    public static void rebuildDescription(AbstractCard card) {
+        if (PhysicalDefect.shouldAddDescription()) {
+            UIStrings uiStrings = CardCrawlGame.languagePack.getUIString(PhysicalDefect.makeID("AlmightyBonus"));
+
+            if (uiStrings != null && uiStrings.TEXT != null) {
+
+                String baseDesc = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
+                card.rawDescription = baseDesc + uiStrings.TEXT[0];
+                card.initializeDescription();
+            }
+        } else {
+
+            card.rawDescription = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
+            card.initializeDescription();
         }
     }
 
-    @Override
-    public void receiveEditRelics() {
-        BaseMod.addRelic(new BackupBattery(), RelicType.SHARED);
-    }
+    @SpirePatch(clz = AbstractCard.class, method = "makeStatEquivalentCopy")
+    public static class FixDescriptionOnCopy {
+        @SpirePostfixPatch
+        public static AbstractCard Postfix(AbstractCard __result) {
+            if (__result instanceof com.megacrit.cardcrawl.cards.blue.Claw) {
+                rebuildDescription(__result);
+            } else if (__result instanceof com.megacrit.cardcrawl.cards.red.Rampage) {
+                rebuildDescription(__result);
+            } else if (__result instanceof com.megacrit.cardcrawl.cards.blue.Defragment) {
+                rebuildDescription(__result);
+            }
 
-    public static void loadConfig() {
-        try {
-            Properties defaults = new Properties();
-            defaults.setProperty("enableNegativeFocus", "true");
-
-            // "PhysicalDefect" 是文件名，"config" 是文件后缀
-            modConfig = new SpireConfig("PhysicalDefect", "config", defaults);
-
-            enableFragmentation = modConfig.getBool("enableNegativeFocus");
-        } catch (Exception e) {
-            e.printStackTrace();
+            return __result;
         }
-    }
-
-    // 3. 注册配置菜单
-    @Override
-    public void receivePostInitialize() {
-        // 加载配置
-        loadConfig();
-
-        // 创建设置面板
-        ModPanel settingsPanel = new ModPanel();
-
-        UIStrings configStrings = CardCrawlGame.languagePack.getUIString(makeID("Config"));
-        String labelText = configStrings.TEXT[0];
-
-        // 创建开关按钮
-        ModLabeledToggleButton enableFocusBtn = new ModLabeledToggleButton(
-                labelText,
-                350.0f, // x 坐标
-                700.0f, // y 坐标
-                Settings.CREAM_COLOR,
-                FontHelper.charDescFont,
-                enableFragmentation, // 初始状态
-                settingsPanel,
-                (label) -> {
-                }, // hover 逻辑
-                (button) -> { // 点击逻辑
-                    enableFragmentation = button.enabled;
-                    try {
-                        modConfig.setBool("enableNegativeFocus", enableFragmentation);
-                        modConfig.save();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-
-        settingsPanel.addUIElement(enableFocusBtn);
-
-        // 注册到 BaseMod (你需要准备一张 badge.png 图片作为 Mod 图标)
-        Texture badgeTexture = new Texture(assetPath("/img/badge.png"));
-        BaseMod.registerModBadge(badgeTexture, MOD_ID, AUTHOR, DESCRIPTION, settingsPanel);
-    }
-
-    public static class Keyword {
-        public String PROPER_NAME;
-        public String[] NAMES;
-        public String DESCRIPTION;
     }
 
 }

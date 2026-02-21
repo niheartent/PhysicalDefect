@@ -1,7 +1,7 @@
 {
     "PhysicalDefect:Almighty": {
         "NAME": "全能",
-        "DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制 NL 获得2层 physicaldefect:碎片化 。",
-        "UPGRADE_DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制 NL 获得3层 physicaldefect:碎片化 。"
+        "DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制。",
+        "UPGRADE_DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制 NL 获得1层 physicaldefect:碎片化 。"
     }
 }

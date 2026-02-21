@@ -79,13 +79,9 @@ public class UIPatch {
     private static void buildBiasedCognitionText(AbstractCard card, String baseDesc) {
         UIStrings uiStrings = CardCrawlGame.languagePack.getUIString(PhysicalDefect.makeID("BiasedCognitionPatch"));
         if (uiStrings != null && uiStrings.TEXT != null && uiStrings.TEXT.length >= 2) {
-            // 偏差认知专属逻辑：升级后补充“固有”属性
-            if (card.upgraded && !card.isInnate) {
-                card.isInnate = true;
-            }
             // 拼接文本
             if (card.upgraded) {
-                card.rawDescription = uiStrings.TEXT[1] + baseDesc + uiStrings.TEXT[0];
+                card.rawDescription = baseDesc + uiStrings.TEXT[0] + uiStrings.TEXT[1];
             } else {
                 card.rawDescription = baseDesc + uiStrings.TEXT[0];
             }

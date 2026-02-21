@@ -18,8 +18,8 @@
     },
     "PhysicalDefect:BiasedCognitionPatch": {
         "TEXT": [
-            " NL 获得1层 physicaldefect:偏差。 ",
-            "固有 。 NL "
+            " NL 获得1层 physicaldefect:偏差 。 ",
+            " NL 获得1层 physicaldefect:碎片化"
         ]
     },
     "PhysicalDefect:BiasPowerPatch": {

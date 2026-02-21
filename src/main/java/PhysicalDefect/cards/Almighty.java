@@ -25,7 +25,7 @@ public class Almighty extends CustomCard {
 
         // 基础属性：虚无
         this.isEthereal = false;
-        this.baseMagicNumber = 2;
+        this.baseMagicNumber = 0;
         this.magicNumber = this.baseMagicNumber;
     }
 
@@ -33,7 +33,9 @@ public class Almighty extends CustomCard {
     public void use(AbstractPlayer p, AbstractMonster m) {
         // 核心效果：赋予全知全能能力
         addToBot(new ApplyPowerAction(p, p, new AlmightyPower(p)));
-        addToBot(new ApplyPowerAction(p, p, new FragmentationPower(p, this.magicNumber), this.magicNumber));
+        if (this.upgraded && this.magicNumber > 0) {
+            addToBot(new ApplyPowerAction(p, p, new FragmentationPower(p, this.magicNumber), this.magicNumber));
+        }
     }
 
     @Override

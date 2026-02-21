@@ -1,7 +1,7 @@
 {
     "PhysicalDefect:Almighty": {
       "NAME": "Almighty",
-      "DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 2 physicaldefect:Fragmentation .",
-      "UPGRADE_DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 3 physicaldefect:Fragmentation ."
+      "DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks.",
+      "UPGRADE_DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 1 physicaldefect:Fragmentation ."
     }
   }

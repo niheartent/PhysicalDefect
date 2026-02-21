@@ -6,7 +6,7 @@
     },
     "PhysicalDefect:DefragmentPatch": {
         "TEXT": [
-            " NL 消耗所有 physicaldefect:碎片化 ：",
+            " NL 消耗所有 physicaldefect:碎片化 : ",
             " NL 获得等同于层数的 敏捷 ",
             " NL 敏捷 翻倍。"
         ]
@@ -18,7 +18,7 @@
     },
     "PhysicalDefect:BiasedCognitionPatch": {
         "TEXT": [
-            " NL 获得1层 偏差 。",
+            " NL 获得1层 physicaldefect:偏差。 ",
             "固有 。 NL "
         ]
     },

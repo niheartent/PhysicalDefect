@@ -95,7 +95,6 @@ public class UIPatch {
     public static class FixDescriptionOnCopy {
         @SpirePostfixPatch
         public static AbstractCard Postfix(AbstractCard __result) {
-            // 这里只需要一句调用，rebuildDescription 内部会用 HashSet 自动判断是否需要处理
             rebuildDescription(__result);
             return __result;
         }
@@ -115,7 +114,6 @@ public class UIPatch {
     public static class AllConstructorsPatch {
         @SpirePostfixPatch
         public static void Postfix(AbstractCard __instance) {
-            // 参数使用 AbstractCard，完美兼容所有子类
             rebuildDescription(__instance);
         }
     }

@@ -3,7 +3,7 @@
         "NAME": "BackupBattery",
         "FLAVOR": "Backup Battery!!!!!!!!",
         "DESCRIPTIONS": [
-            "At the first turn of each combat, NL #yChannel #b1 #yPlasma."
+            "The first time you lose HP each combat, NL #yChannel #b1 #yPlasma."
         ]
     }
 }

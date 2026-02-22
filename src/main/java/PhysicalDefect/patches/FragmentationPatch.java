@@ -40,6 +40,17 @@ public class FragmentationPatch {
         public static SpireField<Boolean> hasTriggeredFocusLoss = new SpireField<>(() -> false);
     }
 
+    @SpirePatch(clz = com.megacrit.cardcrawl.characters.AbstractPlayer.class, method = "preBattlePrep")
+    public static class ResetFocusAccumulatorPatch {
+        @SpirePostfixPatch
+        public static void Postfix(com.megacrit.cardcrawl.characters.AbstractPlayer __instance) {
+            if (PhysicalDefect.enableFragmentation) {
+                // 每次战斗开始前，强制将集中扣除累计池清零
+                PlayerFields.focusLossAccumulator.set(__instance, 0);
+            }
+        }
+    }
+
     // =================================================================
     // 1. 核心判定与公式
     // =================================================================
@@ -98,8 +109,8 @@ public class FragmentationPatch {
                     int currentAcc = PlayerFields.focusLossAccumulator.get(p);
                     currentAcc += lossAmount;
 
-                    int stacksToGain = currentAcc / 2;
-                    int remainder = currentAcc % 2;
+                    int stacksToGain = currentAcc / FragmentationPower.POOLNUM;
+                    int remainder = currentAcc % FragmentationPower.POOLNUM;
                     PlayerFields.focusLossAccumulator.set(p, remainder);
 
                     if (stacksToGain > 0) {

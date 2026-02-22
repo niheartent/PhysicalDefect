@@ -6,9 +6,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePostfixPatch;
-import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
@@ -221,42 +218,6 @@ public class PhysicalDefect
             for (Keyword keyword : keywords) {
                 BaseMod.addKeyword("physicaldefect", keyword.PROPER_NAME, keyword.NAMES, keyword.DESCRIPTION);
             }
-        }
-    }
-    // =================================================================
-    // 3. UI 更新
-    // =================================================================
-
-    public static void rebuildDescription(AbstractCard card) {
-        if (PhysicalDefect.shouldAddDescription()) {
-            UIStrings uiStrings = CardCrawlGame.languagePack.getUIString(PhysicalDefect.makeID("AlmightyBonus"));
-
-            if (uiStrings != null && uiStrings.TEXT != null) {
-
-                String baseDesc = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
-                card.rawDescription = baseDesc + uiStrings.TEXT[0];
-                card.initializeDescription();
-            }
-        } else {
-
-            card.rawDescription = CardCrawlGame.languagePack.getCardStrings(card.cardID).DESCRIPTION;
-            card.initializeDescription();
-        }
-    }
-
-    @SpirePatch(clz = AbstractCard.class, method = "makeStatEquivalentCopy")
-    public static class FixDescriptionOnCopy {
-        @SpirePostfixPatch
-        public static AbstractCard Postfix(AbstractCard __result) {
-            if (__result instanceof com.megacrit.cardcrawl.cards.blue.Claw) {
-                rebuildDescription(__result);
-            } else if (__result instanceof com.megacrit.cardcrawl.cards.red.Rampage) {
-                rebuildDescription(__result);
-            } else if (__result instanceof com.megacrit.cardcrawl.cards.blue.Defragment) {
-                rebuildDescription(__result);
-            }
-
-            return __result;
         }
     }
 

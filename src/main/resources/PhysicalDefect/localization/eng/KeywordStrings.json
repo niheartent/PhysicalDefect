@@ -21,5 +21,14 @@
             "bias"
         ],
         "DESCRIPTION": "At the start of your turn, lose #b1 #yFocus. NL Each hit of your #yFragmentation attacks grants #yBlock equal to this amount."
+    },
+    {
+        "PROPER_NAME": "Register",
+        "NAMES": [
+            "Register",
+            "register",
+            "registers"
+        ],
+        "DESCRIPTION": "Empty: Evoke to draw 1 card. At the end of your turn, store a card. NL Loaded: At the end of your turn, gain Block equal to the stored card's cost. Evoke to play it for free."
     }
 ]

@@ -27,5 +27,10 @@
       " NL Each hit of your #yFragmentation attacks grants ",
       " Block"
     ]
+  },
+  "PhysicalDefect:MultiStoreAction": {
+    "TEXT": [
+      "存入寄存器。"
+    ]
   }
 }

@@ -14,17 +14,14 @@ public class Almighty extends CustomCard {
     // 卡牌ID：PhysicalDefect:Almighty
     public static final String ID = PhysicalDefect.makeID("Almighty");
     private static final CardStrings cardStrings = CardCrawlGame.languagePack.getCardStrings(ID);
-
-    // 图片路径
-    public static final String IMG = PhysicalDefect.assetPath("img/cards/Almighty.png");
+    public static final String IMG_PATH = PhysicalDefect.assetPath("img/cards/Almighty.png");
+    private static final int COST = 2;
 
     public Almighty() {
-        super(ID, cardStrings.NAME, IMG, 2, cardStrings.DESCRIPTION,
+        super(ID, cardStrings.NAME, IMG_PATH, COST, cardStrings.DESCRIPTION,
                 CardType.POWER, CardColor.BLUE,
                 CardRarity.RARE, CardTarget.SELF);
 
-        // 基础属性：虚无
-        this.isEthereal = false;
         this.baseMagicNumber = 0;
         this.magicNumber = this.baseMagicNumber;
     }

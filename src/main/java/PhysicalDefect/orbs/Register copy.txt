@@ -1,0 +1,151 @@
+package PhysicalDefect.orbs;
+
+import PhysicalDefect.actions.MultiStoreInRegisterAction;
+import PhysicalDefect.modcore.PhysicalDefect;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.common.DrawCardAction;
+import com.megacrit.cardcrawl.actions.common.GainBlockAction;
+import com.megacrit.cardcrawl.actions.utility.NewQueueCardAction;
+import com.megacrit.cardcrawl.cards.AbstractCard;
+import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.helpers.FontHelper;
+import com.megacrit.cardcrawl.localization.OrbStrings;
+import com.megacrit.cardcrawl.orbs.AbstractOrb;
+
+public class Register extends AbstractOrb {
+    public static final String ORB_ID = PhysicalDefect.makeID("Register");
+
+    private static final OrbStrings orbString = CardCrawlGame.languagePack.getOrbString(ORB_ID);
+    public static final String[] DESC = orbString.DESCRIPTION;
+
+    public AbstractCard storedCard = null;
+    private AbstractCard dummyCard = null;
+
+    public Register() {
+        this.ID = ORB_ID;
+        this.name = orbString.NAME;
+        this.evokeAmount = 1;
+        this.passiveAmount = 0;
+        this.updateDescription();
+        this.channelAnimTimer = 0.5F;
+    }
+
+    // --- 新增：专门用于存入卡牌的方法 ---
+    public void setStoredCard(AbstractCard c) {
+        this.storedCard = c;
+
+        // 1. 创建替身卡牌，并剔除所有文字信息
+        this.dummyCard = c.makeStatEquivalentCopy();
+        this.dummyCard.name = "";
+        this.dummyCard.rawDescription = "";
+        // 杀戮尖塔底层逻辑：费用设为 -2 将不渲染左上角费用图标
+        this.dummyCard.cost = -2;
+        this.dummyCard.costForTurn = -2;
+        this.dummyCard.initializeDescription();
+
+        // 2. 设置替身卡牌在球内的缩放大小
+        this.dummyCard.drawScale = 0.15F;
+        this.dummyCard.targetDrawScale = 0.15F;
+
+        // 3. 预设好真实卡牌（鼠标悬停时显示）的缩放大小，75%比较合适
+        this.storedCard.drawScale = 0.75F;
+        this.storedCard.targetDrawScale = 0.75F;
+    }
+
+    @Override
+    public void updateDescription() {
+        this.applyFocus();
+        if (this.storedCard == null) {
+            this.description = DESC[0];
+            this.passiveAmount = 0;
+        } else {
+            int blockAmt = Math.max(0, this.storedCard.costForTurn);
+            this.passiveAmount = blockAmt;
+            this.description = DESC[1] + this.storedCard.name + DESC[2] + DESC[3] + this.passiveAmount + DESC[4];
+        }
+    }
+
+    @Override
+    public void onEvoke() {
+        if (this.storedCard != null) {
+            if (this.storedCard.type == AbstractCard.CardType.CURSE
+                    || this.storedCard.type == AbstractCard.CardType.STATUS) {
+                AbstractDungeon.player.discardPile.addToTop(this.storedCard);
+            } else {
+                this.storedCard.freeToPlayOnce = true;
+                AbstractDungeon.actionManager.addToTop(new NewQueueCardAction(this.storedCard, true, false, true));
+            }
+            // 清理数据
+            this.storedCard = null;
+            this.dummyCard = null;
+        } else {
+            AbstractDungeon.actionManager.addToTop(new DrawCardAction(AbstractDungeon.player, 1));
+        }
+    }
+
+    @Override
+    public void onEndOfTurn() {
+        if (this.storedCard != null) {
+            if (this.passiveAmount > 0) {
+                AbstractDungeon.actionManager.addToBottom(
+                        new GainBlockAction(AbstractDungeon.player, AbstractDungeon.player, this.passiveAmount));
+            }
+        } else {
+            boolean isActionAlreadyQueued = false;
+            for (AbstractGameAction a : AbstractDungeon.actionManager.actions) {
+                if (a instanceof MultiStoreInRegisterAction) {
+                    isActionAlreadyQueued = true;
+                    break;
+                }
+            }
+            if (!isActionAlreadyQueued && !AbstractDungeon.player.hand.isEmpty()) {
+                AbstractDungeon.actionManager.addToBottom(new MultiStoreInRegisterAction());
+            }
+        }
+    }
+
+    // --- 修改：完美的浮动动画 ---
+    @Override
+    public void updateAnimation() {
+        super.updateAnimation();
+        // 父类的 super.updateAnimation() 会自动更新 this.bobEffect 的上下浮动值
+        if (this.dummyCard != null) {
+            this.dummyCard.current_x = this.cX;
+            // 加上 bobEffect.y，让卡牌和球一起呼吸浮动！
+            this.dummyCard.current_y = this.cY + this.bobEffect.y;
+        }
+    }
+
+    @Override
+    public void render(SpriteBatch sb) {
+        if (this.dummyCard != null) {
+            this.dummyCard.render(sb);
+        } else {
+            FontHelper.renderFontCentered(sb, FontHelper.cardEnergyFont_L, DESC[5], this.cX, this.cY + this.bobEffect.y,
+                    Color.WHITE.cpy());
+        }
+
+        this.hb.render(sb);
+
+        if (this.hb.hovered && this.storedCard != null) {
+            this.storedCard.current_x = this.cX;
+            this.storedCard.current_y = this.cY + 160.0F * Settings.scale;
+            this.storedCard.render(sb);
+        }
+    }
+
+    @Override
+    public void playChannelSFX() {
+        CardCrawlGame.sound.play("ORB_SLOT_GAIN", 0.1F);
+    }
+
+    @Override
+    public AbstractOrb makeCopy() {
+        return new Register();
+    }
+}

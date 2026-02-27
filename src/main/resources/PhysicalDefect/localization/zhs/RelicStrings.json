@@ -5,5 +5,12 @@
         "DESCRIPTIONS": [
             "每场战斗中，当你 #y第一次失去生命 时， NL #y生成 #b1 #y等离子球。"
         ]
+    },
+    "PhysicalDefect:ExternalRAM": {
+        "NAME": "外接内存",
+        "FLAVOR": "即插即用，虽然接口沾了点灰。",
+        "DESCRIPTIONS": [
+            "在每场战斗开始时，生成 1 个 #y寄存器 。"
+        ]
     }
 }

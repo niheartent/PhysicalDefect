@@ -27,5 +27,10 @@
             " NL 你的每段 #y碎片化 攻击额外提供",
             "点 格挡 。"
         ]
+    },
+    "PhysicalDefect:MultiStoreAction": {
+        "TEXT": [
+            "存入寄存器。"
+        ]
     }
 }

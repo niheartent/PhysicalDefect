@@ -1,11 +1,13 @@
 {
-    "PhysicalDefect:SensorOrb": {
-        "NAME": "Sensor",
+    "PhysicalDefect:Register": {
+        "NAME": "寄存器",
         "DESCRIPTION": [
-            "At the start of turns draw #b",
-            " cards",
-            " NL #yEvoke: draw #b",
-            " cards"
+            "空载：被激发时，抽 1 张牌。回合结束时，将手牌存入。",
+            "满载 (",
+            ")：回合结束时提供等同于耗能的格挡。激发时无消耗打出。",
+            " (当前提供 ",
+            " 格挡)",
+            "空"
         ]
     }
 }

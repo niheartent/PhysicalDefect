@@ -28,6 +28,8 @@ public class FragmentationPatch {
     public static class CardFields {
         public static SpireField<Boolean> isFragmentedInstance = new SpireField<>(() -> false);
         public static SpireField<Integer> snapshotDamage = new SpireField<>(() -> 0);
+        // 【新增】：标记这张牌是否正被存放在寄存器球中
+        public static SpireField<Boolean> isInRegister = new SpireField<>(() -> false);
     }
 
     @SpirePatch(clz = AbstractPlayer.class, method = SpirePatch.CLASS)
@@ -45,7 +47,6 @@ public class FragmentationPatch {
         @SpirePostfixPatch
         public static void Postfix(com.megacrit.cardcrawl.characters.AbstractPlayer __instance) {
             if (PhysicalDefect.enableFragmentation) {
-                // 每次战斗开始前，强制将集中扣除累计池清零
                 PlayerFields.focusLossAccumulator.set(__instance, 0);
             }
         }
@@ -55,12 +56,13 @@ public class FragmentationPatch {
     // 1. 核心判定与公式
     // =================================================================
     private static boolean shouldFragment(AbstractPlayer p, AbstractCard card) {
-        // 【极简开关】
         if (!PhysicalDefect.enableFragmentation)
             return false;
 
         if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
             return false;
+
+        // 必须是攻击牌，且是普通伤害（非AOE，非荆棘反伤类）
         if (card.type != AbstractCard.CardType.ATTACK)
             return false;
 
@@ -69,14 +71,15 @@ public class FragmentationPatch {
             return false;
         }
 
-        boolean isDerivative = CardFields.isFragmentedInstance.get(card);
-        boolean isInHand = p.hand.contains(card);
-        boolean isInLimbo = p.limbo.contains(card);
-
-        if (!isDerivative && !isInHand && !isInLimbo) {
+        // 【核心修复】：
+        // 1. 如果是碎片产生的衍生物，绝对不触发（防止无限递归）
+        if (CardFields.isFragmentedInstance.get(card)) {
             return false;
         }
 
+        // 2. 只要不是衍生物，我们放宽判定：
+        // 只要是玩家打出的牌，不管是来自手牌、虚空区、寄存器还是发现/中微子打出的牌，都允许碎片化
+        // 删掉原来的 isInHand / isInLimbo / isInRegister 的位置检查
         return true;
     }
 
@@ -164,14 +167,20 @@ public class FragmentationPatch {
     // =================================================================
     // 4. 触发攻击逻辑
     // =================================================================
+
     @SpirePatch(clz = UseCardAction.class, method = SpirePatch.CONSTRUCTOR, paramtypez = { AbstractCard.class,
             AbstractCreature.class })
     public static class TriggerFragmentAttack {
         @SpirePrefixPatch
         public static void Prefix(UseCardAction __instance, AbstractCard card, AbstractCreature target) {
+            if (CardFields.isInRegister.get(card)) {
+                CardFields.isInRegister.set(card, false);
+            }
+
             if (CardFields.isFragmentedInstance.get(card))
                 return;
             AbstractPlayer p = AbstractDungeon.player;
+
             if (!shouldFragment(p, card))
                 return;
 
@@ -191,7 +200,14 @@ public class FragmentationPatch {
         @SpirePostfixPatch
         public static void Postfix(AbstractCard __instance, SpriteBatch sb) {
             AbstractPlayer p = AbstractDungeon.player;
-            if (p == null || !p.hasPower(FragmentationPower.POWER_ID) || !p.hand.contains(__instance))
+            if (p == null || !p.hasPower(FragmentationPower.POWER_ID))
+                return;
+
+            boolean inHand = p.hand.contains(__instance);
+            boolean inRegister = CardFields.isInRegister.get(__instance);
+
+            // 【修改】：不仅手牌，处于寄存器中的牌也正常绘制 xN UI
+            if (!inHand && !inRegister)
                 return;
 
             if (shouldFragment(p, __instance) && !CardFields.isFragmentedInstance.get(__instance)) {

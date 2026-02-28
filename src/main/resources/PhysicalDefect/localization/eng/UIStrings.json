@@ -30,7 +30,7 @@
   },
   "PhysicalDefect:MultiStoreAction": {
     "TEXT": [
-      "存入寄存器。"
+      "save to Registers"
     ]
   }
 }

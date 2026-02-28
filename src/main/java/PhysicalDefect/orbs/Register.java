@@ -1,6 +1,7 @@
 package PhysicalDefect.orbs;
 
 import PhysicalDefect.actions.MultiStoreInRegisterAction;
+import PhysicalDefect.actions.PlayRegisterCardAction;
 import PhysicalDefect.modcore.PhysicalDefect;
 import com.megacrit.cardcrawl.vfx.cardManip.CardGlowBorder;
 import com.megacrit.cardcrawl.vfx.AbstractGameEffect;
@@ -21,10 +22,13 @@ import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.localization.OrbStrings;
 import com.megacrit.cardcrawl.orbs.AbstractOrb;
+import PhysicalDefect.patches.FragmentationPatch;
+
+import PhysicalDefect.patches.FragmentationPatch;
+import com.megacrit.cardcrawl.monsters.AbstractMonster;
 
 public class Register extends AbstractOrb {
     public static final String ORB_ID = PhysicalDefect.makeID("Register");
@@ -56,7 +60,7 @@ public class Register extends AbstractOrb {
         this.channelAnimTimer = 0.5F;
 
         if (emptyTex == null) {
-            emptyTex = ImageMaster.loadImage(PhysicalDefect.assetPath("img/orbs/register.png"));
+            emptyTex = ImageMaster.loadImage(PhysicalDefect.assetPath("img/orbs/Register.png"));
         }
 
         // --- 核心改动：获取球时，触发边框的激光扫描！ ---
@@ -67,6 +71,13 @@ public class Register extends AbstractOrb {
 
     public void setStoredCard(AbstractCard c) {
         this.storedCard = c;
+
+        // 【修复幽灵卡的核心1】：强行洗去所有悬停、透明度和动画残留
+        this.storedCard.unhover();
+        this.storedCard.unfadeOut();
+        this.storedCard.lighten(true);
+        this.storedCard.setAngle(0.0F);
+        this.storedCard.isFlipped = false; // 防止背面朝上的状态残留
 
         this.dummyCard = c.makeStatEquivalentCopy();
         this.dummyCard.name = "";
@@ -80,17 +91,16 @@ public class Register extends AbstractOrb {
         this.storedCard.drawScale = 0.75F;
         this.storedCard.targetDrawScale = 0.75F;
 
-        // --- 初始化放大版的发光专属替身卡 ---
         this.glowCard = c.makeStatEquivalentCopy();
-        // 缩放比例设为 0.165F（比正常卡牌大一圈），这样光晕就会更显著
-        this.glowCard.drawScale = 0.165F;
-        this.glowCard.targetDrawScale = 0.165F;
+        this.glowCard.drawScale = 0.175F;
+        this.glowCard.targetDrawScale = 0.175F;
 
-        // --- 核心改动：存入牌时，触发卡牌的激光扫描！ ---
         this.isScanningCard = true;
         this.scanTimer = SCAN_TIME;
-        CardCrawlGame.sound.play("ORB_PLASMA_CHANNEL", 0.1F); // 再次播放音效
+        CardCrawlGame.sound.play("ORB_PLASMA_CHANNEL", 0.1F);
         this.glowEffects.clear();
+
+        FragmentationPatch.CardFields.isInRegister.set(this.storedCard, true);
     }
 
     @Override
@@ -111,28 +121,34 @@ public class Register extends AbstractOrb {
         CardCrawlGame.sound.play("ORB_PLASMA_EVOKE", 0.1F);
 
         if (this.storedCard != null) {
-            if (this.storedCard.type == AbstractCard.CardType.CURSE
-                    || this.storedCard.type == AbstractCard.CardType.STATUS) {
+            // 【千万不要在这里过早剥离 isInRegister 标记！】
+            // 必须让卡牌保留寄存器标记，确保它在排队被计算伤害时依然能触发碎片化！
 
-                // 【核心修改】：判断卡牌是否带有“消耗”或“虚无”属性
-                if (this.storedCard.exhaust || this.storedCard.isEthereal) {
-                    // 将卡牌临时放入 limbo（结算暂存区），然后调用原版的消耗逻辑
-                    // 这样能完美触发【无惧疼痛】、【枯木树枝】、【卡戎之灰】等联动，并且不触发其负面效果
-                    AbstractDungeon.player.limbo.addToTop(this.storedCard);
-                    AbstractDungeon.player.limbo.moveToExhaustPile(this.storedCard);
-                } else {
-                    // 没有消耗/虚无属性的普通状态牌或诅咒，进入弃牌堆
-                    AbstractDungeon.player.discardPile.addToTop(this.storedCard);
-                }
+            this.storedCard.unhover();
+            this.storedCard.unfadeOut();
+            this.storedCard.setAngle(0.0F);
+            this.storedCard.targetDrawScale = 0.75F;
 
+            if (this.storedCard.exhaust || this.storedCard.isEthereal) {
+                // 如果是消耗/虚无牌，在这里安全剥离标记并消耗掉
+                FragmentationPatch.CardFields.isInRegister.set(this.storedCard, false);
+                AbstractCard c = this.storedCard;
+                AbstractDungeon.actionManager.addToTop(new AbstractGameAction() {
+                    @Override
+                    public void update() {
+                        AbstractDungeon.player.limbo.addToBottom(c);
+                        AbstractDungeon.player.limbo.moveToExhaustPile(c);
+                        this.isDone = true;
+                    }
+                });
             } else {
-                this.storedCard.freeToPlayOnce = true;
-                AbstractDungeon.actionManager.addToTop(new NewQueueCardAction(this.storedCard, true, false, true));
+                // 正常打出：调用刚才我们写好的 Action 塞入原版队列
+                AbstractDungeon.actionManager.addToTop(new PlayRegisterCardAction(this.storedCard, this.cX, this.cY));
             }
 
             this.storedCard = null;
             this.dummyCard = null;
-            this.glowCard = null; // 激发时清理发光卡牌
+            this.glowCard = null;
         } else {
             AbstractDungeon.actionManager.addToTop(new DrawCardAction(AbstractDungeon.player, 1));
         }
@@ -158,6 +174,15 @@ public class Register extends AbstractOrb {
             if (!isActionAlreadyQueued && !AbstractDungeon.player.hand.isEmpty()) {
                 AbstractDungeon.actionManager.addToBottom(new MultiStoreInRegisterAction());
             }
+        }
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        if (this.storedCard != null) {
+            this.storedCard.applyPowers();
         }
     }
 

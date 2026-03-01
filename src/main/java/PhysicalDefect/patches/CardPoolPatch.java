@@ -5,7 +5,9 @@ import com.evacipated.cardcrawl.modthespire.lib.SpirePostfixPatch;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 
+import PhysicalDefect.cards.Allocate;
 import PhysicalDefect.cards.Almighty;
+import PhysicalDefect.cards.Mov;
 import PhysicalDefect.characters.MyPhysicalDefect; // 确保指向你的角色类
 import PhysicalDefect.modcore.PhysicalDefect;
 
@@ -30,10 +32,12 @@ public class CardPoolPatch {
             if (!fragEnabled) {
                 filterAllCard(FRAGMENT_CORE_CARDS);
                 filterAllCard(GENERATOR_CARDS);
+                filterAllCard(REGISTER_CORE_CARDS);
             }
         } else {
             if (!fragEnabled) {
                 filterAllCard(ONLY_ALMIGHTY);
+                filterAllCard(REGISTER_CORE_CARDS);
             }
         }
 
@@ -68,6 +72,9 @@ public class CardPoolPatch {
     // 3. 碎片化机制核心
     private static final Set<String> FRAGMENT_CORE_CARDS = new HashSet<>(Arrays.asList(
             Almighty.ID, "Defragment", "Biased Cognition"));
+
+    private static final Set<String> REGISTER_CORE_CARDS = new HashSet<>(Arrays.asList(
+            Allocate.ID, Mov.ID));
 
     // 4. 仅全能
     private static final Set<String> ONLY_ALMIGHTY = new HashSet<>(Arrays.asList(

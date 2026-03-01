@@ -6,13 +6,13 @@ import basemod.abstracts.CustomRelic;
 import com.megacrit.cardcrawl.actions.defect.ChannelAction;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
 
-public class ExternalRAM extends CustomRelic {
-    public static final String ID = PhysicalDefect.makeID("ExternalRAM");
-    private static final String IMG_PATH = PhysicalDefect.assetPath("img/relics/ExternalRAM.png");
+public class ExtraChip extends CustomRelic {
+    public static final String ID = PhysicalDefect.makeID("ExtraChip");
+    private static final String IMG_PATH = PhysicalDefect.assetPath("img/relics/ExtraChip.png");
     private static final LandingSound LANDING_SOUND = LandingSound.CLINK;
     private static final RelicTier RELIC_TIER = RelicTier.UNCOMMON; // 初始遗物
 
-    public ExternalRAM() {
+    public ExtraChip() {
         super(ID, ImageMaster.loadImage(IMG_PATH), RELIC_TIER, LANDING_SOUND);
     }
 
@@ -39,6 +39,6 @@ public class ExternalRAM extends CustomRelic {
 
     @Override
     public CustomRelic makeCopy() {
-        return new ExternalRAM();
+        return new ExtraChip();
     }
 }

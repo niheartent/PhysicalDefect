@@ -18,11 +18,12 @@ import com.megacrit.cardcrawl.localization.PowerStrings;
 import com.megacrit.cardcrawl.localization.RelicStrings;
 import com.megacrit.cardcrawl.localization.UIStrings;
 
-import PhysicalDefect.cards.AllocateCache;
+import PhysicalDefect.cards.Allocate;
 import PhysicalDefect.cards.Almighty;
+import PhysicalDefect.cards.Mov;
 import PhysicalDefect.characters.MyPhysicalDefect;
 import PhysicalDefect.relics.BackupBattery;
-import PhysicalDefect.relics.ExternalRAM;
+import PhysicalDefect.relics.ExtraChip;
 import basemod.BaseMod;
 import basemod.ModLabeledToggleButton;
 import basemod.ModPanel;
@@ -99,7 +100,8 @@ public class PhysicalDefect
     @Override
     public void receiveEditCards() {
         BaseMod.addCard(new Almighty());
-        BaseMod.addCard(new AllocateCache());
+        BaseMod.addCard(new Allocate());
+        BaseMod.addCard(new Mov());
     }
 
     @Override
@@ -133,7 +135,7 @@ public class PhysicalDefect
     @Override
     public void receiveEditRelics() {
         BaseMod.addRelic(new BackupBattery(), RelicType.BLUE);
-        BaseMod.addRelic(new ExternalRAM(), RelicType.BLUE);
+        BaseMod.addRelic(new ExtraChip(), RelicType.BLUE);
     }
 
     @Override

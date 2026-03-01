@@ -7,7 +7,7 @@
         ]
     },
     "PhysicalDefect:ExternalRAM": {
-        "NAME": "外接内存",
+        "NAME": "额外芯片",
         "FLAVOR": "即插即用，虽然接口沾了点灰。",
         "DESCRIPTIONS": [
             "在每场战斗开始时，生成 1 个 #y寄存器 。"

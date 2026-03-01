@@ -4,8 +4,14 @@
         "DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制。",
         "UPGRADE_DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制 NL 获得1层 physicaldefect:碎片化 。"
     },
-    "PhysicalDefect:AllocateCache": {
+    "PhysicalDefect:Allocate": {
         "NAME": "分配",
         "DESCRIPTION": "生成 1 个 physicaldefect:寄存器 。"
-    }
+    },
+    "PhysicalDefect:Mov": {
+    "NAME": "转移",
+    "DESCRIPTION": "将所有 physicaldefect:寄存器 中的牌返回手牌。 NL 然后重新存入 physicaldefect:寄存器 。"
+  }
+
+
 }

@@ -4,8 +4,12 @@
     "DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks.",
     "UPGRADE_DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 1 physicaldefect:Fragmentation ."
   },
-  "PhysicalDefect:AllocateCache": {
+  "PhysicalDefect:Allocate": {
     "NAME": "Allocate",
     "DESCRIPTION": "Channel 1 physicaldefect:Register ."
+  },
+  "PhysicalDefect:Mov": {
+    "NAME": "MOV",
+    "DESCRIPTION": "Return all cards in physicaldefect:Register to your hand. NL Then store cards into physicaldefect:Register ."
   }
 }

@@ -685,4 +685,31 @@ public class Register extends AbstractOrb {
         public void dispose() {
         }
     }
+
+    public AbstractCard removeCard() {
+        if (this.storedCard == null) {
+            return null;
+        }
+
+        AbstractCard c = this.storedCard;
+
+        // 1. 清除内部引用与替身卡牌
+        this.storedCard = null;
+        this.dummyCard = null;
+        this.glowCard = null;
+        this.glowEffects.clear();
+
+        // 2. 剥离寄存器标记 (极其重要，防止伤害结算异常)
+        FragmentationPatch.CardFields.isInRegister.set(c, false);
+
+        // 3. 触发激光扫描特效，营造“边框被重置为空载”的视觉效果
+        this.isSpawningOrb = true;
+        this.scanTimer = SCAN_TIME;
+        CardCrawlGame.sound.play("ORB_PLASMA_CHANNEL", 0.1F); // 播放等离子音效配合重置
+
+        // 4. 更新球的文字描述与被动格挡数值 (归零)
+        this.updateDescription();
+
+        return c;
+    }
 }

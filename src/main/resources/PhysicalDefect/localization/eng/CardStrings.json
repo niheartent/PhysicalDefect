@@ -5,7 +5,7 @@
     "UPGRADE_DESCRIPTION": "Remove special effect restrictions from physicaldefect:Fragmentation attacks. NL Gain 1 physicaldefect:Fragmentation ."
   },
   "PhysicalDefect:AllocateCache": {
-    "NAME": "Allocate Cache",
+    "NAME": "Allocate",
     "DESCRIPTION": "Channel 1 physicaldefect:Register ."
   }
 }

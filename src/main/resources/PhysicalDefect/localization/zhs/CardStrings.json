@@ -5,7 +5,7 @@
         "UPGRADE_DESCRIPTION": "解除 physicaldefect:碎片化 攻击的特效限制 NL 获得1层 physicaldefect:碎片化 。"
     },
     "PhysicalDefect:AllocateCache": {
-        "NAME": "开辟缓存",
+        "NAME": "分配",
         "DESCRIPTION": "生成 1 个 physicaldefect:寄存器 。"
     }
 }

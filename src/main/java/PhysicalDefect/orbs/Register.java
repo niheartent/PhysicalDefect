@@ -14,10 +14,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.actions.common.DrawCardAction;
 import com.megacrit.cardcrawl.actions.common.GainBlockAction;
-import com.megacrit.cardcrawl.actions.utility.NewQueueCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
@@ -26,9 +26,7 @@ import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.localization.OrbStrings;
 import com.megacrit.cardcrawl.orbs.AbstractOrb;
 import PhysicalDefect.patches.FragmentationPatch;
-
-import PhysicalDefect.patches.FragmentationPatch;
-import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.helpers.FontHelper;
 
 public class Register extends AbstractOrb {
     public static final String ORB_ID = PhysicalDefect.makeID("Register");
@@ -92,8 +90,8 @@ public class Register extends AbstractOrb {
         this.storedCard.targetDrawScale = 0.75F;
 
         this.glowCard = c.makeStatEquivalentCopy();
-        this.glowCard.drawScale = 0.175F;
-        this.glowCard.targetDrawScale = 0.175F;
+        this.glowCard.drawScale = 0.155F;
+        this.glowCard.targetDrawScale = 0.155F;
 
         this.isScanningCard = true;
         this.scanTimer = SCAN_TIME;
@@ -157,9 +155,30 @@ public class Register extends AbstractOrb {
 
     @Override
     public void onEndOfTurn() {
-        // (被动逻辑保持不变)
+        passiveEffect();
+    }
+
+    @Override
+    public void onStartOfTurn() {
+    }
+
+    public void passiveEffect() {
         if (this.storedCard != null) {
             if (this.passiveAmount > 0) {
+                // 获取球当前的中心坐标
+                float effectX = this.cX;
+                float effectY = this.cY + this.bobEffect.y;
+
+                // 1. 触发一次科技感圆环扩散脉冲
+                AbstractDungeon.effectsQueue.add(new RegisterRingPulseEffect(effectX, effectY));
+
+                // 2. 触发 10~15 个先爆开后追踪玩家的小光点
+                int particleCount = MathUtils.random(10, 15);
+                for (int i = 0; i < particleCount; i++) {
+                    AbstractDungeon.effectsQueue.add(new RegisterHomingParticle(effectX, effectY));
+                }
+
+                // 原有的格挡动作
                 AbstractDungeon.actionManager.addToBottom(
                         new GainBlockAction(AbstractDungeon.player, AbstractDungeon.player, this.passiveAmount));
             }
@@ -175,6 +194,7 @@ public class Register extends AbstractOrb {
                 AbstractDungeon.actionManager.addToBottom(new MultiStoreInRegisterAction());
             }
         }
+
     }
 
     @Override
@@ -268,7 +288,7 @@ public class Register extends AbstractOrb {
             progress = 1.0F - (this.scanTimer / SCAN_TIME);
         }
 
-        // 预计算裁剪坐标 (补回之前的缺漏！)
+        // 预计算裁剪坐标
         int clipX = (int) (this.cX - halfWidth);
         int clipY = (int) (drawY - halfHeight);
         int clipW = (int) (fullWidth * progress);
@@ -303,6 +323,8 @@ public class Register extends AbstractOrb {
                 Gdx.gl.glScissor(clipX, clipY, clipW, clipH);
 
                 this.dummyCard.render(sb);
+                // --- 新增：在扫描裁剪区域内渲染全息卡费数字 ---
+                renderHolographicCost(sb, drawY);
 
                 sb.flush();
                 Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
@@ -312,8 +334,10 @@ public class Register extends AbstractOrb {
                 for (AbstractGameEffect e : this.glowEffects) {
                     e.render(sb);
                 }
-                // 注意：这里仍然渲染原本大小的 dummyCard，只有发光是用 glowCard 撑大的！
+                // 注意：这里仍然渲染原本大小的 dummyCard
                 this.dummyCard.render(sb);
+                // --- 新增：在正常状态下渲染全息卡费数字 ---
+                renderHolographicCost(sb, drawY);
             }
         }
 
@@ -321,9 +345,32 @@ public class Register extends AbstractOrb {
 
         if (this.hb.hovered && this.storedCard != null) {
             this.storedCard.current_x = this.cX;
-            this.storedCard.current_y = this.cY + 160.0F * Settings.scale;
+            this.storedCard.current_y = this.cY + 155.0F * Settings.scale;
             this.storedCard.render(sb);
         }
+    }
+
+    // ==========================================
+    // 新增：绘制科幻全息风格的卡费/格挡数字
+    // ==========================================
+    private void renderHolographicCost(SpriteBatch sb, float drawY) {
+        String costStr = String.valueOf(this.passiveAmount);
+
+        // 位置计算：缩略图下半部分（正好盖住原本描述文字的区域）
+        float textY = drawY - 18.0F * Settings.scale;
+
+        // --- 1. 绘制科幻风格的半透明数字底框 ---
+        sb.setBlendFunction(770, 1); // 开启叠加高亮混合模式
+        sb.setBlendFunction(770, 771); // 恢复正常混合模式
+
+        // --- 2. 绘制发光数字 ---
+        // 使用顶栏大数字字体 (topPanelAmountFont)，颜色设定为极其耀眼的青白色
+        FontHelper.renderFontCentered(sb,
+                FontHelper.topPanelAmountFont,
+                costStr,
+                this.cX,
+                textY + 2.0F * Settings.scale, // 字体基线微调，使其在框内绝对居中
+                new Color(0.6F, 1.0F, 1.0F, 1.0F));
     }
 
     // 抽取出的公共方法：绘制空边框
@@ -475,6 +522,162 @@ public class Register extends AbstractOrb {
             sb.setColor(this.color);
             float renderX = this.x + MathUtils.sin(this.waveTimer) * this.waveAmplitude;
             sb.draw(ImageMaster.WHITE_SQUARE_IMG, renderX, this.y, this.size, this.size);
+            sb.setBlendFunction(770, 771);
+        }
+
+        @Override
+        public void dispose() {
+        }
+    }
+
+    // ==========================================
+    // 产生格挡时：科技感光环扩散脉冲
+    // ==========================================
+    private static class RegisterRingPulseEffect extends AbstractGameEffect {
+        private float x;
+        private float y;
+        private float scaleMult;
+        private com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion img;
+
+        public RegisterRingPulseEffect(float x, float y) {
+            this.x = x;
+            this.y = y;
+            this.duration = 0.5F;
+            this.startingDuration = 0.5F;
+            this.img = ImageMaster.WHITE_RING; // 原版标准的平滑光环
+
+            // 亮青色，与你的待机粒子呼应
+            this.color = new Color(0.2F, 1.0F, 1.0F, 0.8F);
+        }
+
+        @Override
+        public void update() {
+            this.duration -= Gdx.graphics.getDeltaTime();
+
+            // 圆环迅速向外扩散放大
+            this.scaleMult = Interpolation.exp10Out.apply(2.5F, 0.1F, this.duration / this.startingDuration);
+            // 透明度快速衰减
+            this.color.a = Interpolation.fade.apply(0.0F, 0.8F, this.duration / this.startingDuration);
+
+            if (this.duration < 0.0F) {
+                this.isDone = true;
+            }
+        }
+
+        @Override
+        public void render(SpriteBatch sb) {
+            sb.setBlendFunction(770, 1);
+            sb.setColor(this.color);
+            float w = this.img.packedWidth;
+            float h = this.img.packedHeight;
+
+            sb.draw(this.img,
+                    this.x - w / 2.0F, this.y - h / 2.0F,
+                    w / 2.0F, h / 2.0F,
+                    w, h,
+                    this.scaleMult * Settings.scale, this.scaleMult * Settings.scale, 0.0F);
+            sb.setBlendFunction(770, 771);
+        }
+
+        @Override
+        public void dispose() {
+        }
+    }
+
+    // ==========================================
+    // 产生格挡时：先爆开、后追踪飞向玩家的小光点
+    // ==========================================
+    private static class RegisterHomingParticle extends AbstractGameEffect {
+        private float x;
+        private float y;
+        private float vX;
+        private float vY;
+        private float targetX;
+        private float targetY;
+        private float size;
+        private boolean isReturning = false;
+        private float explodeTimer;
+        private com.badlogic.gdx.graphics.Texture img;
+
+        public RegisterHomingParticle(float x, float y) {
+            this.img = ImageMaster.WHITE_SQUARE_IMG; // 和你的待机粒子用一样的正方形，靠渲染拉长
+            this.x = x;
+            this.y = y;
+
+            // 爆炸阶段的随机方向和速度
+            float angle = MathUtils.random(0.0F, 360.0F);
+            float speed = MathUtils.random(200.0F, 600.0F) * Settings.scale;
+            this.vX = MathUtils.cosDeg(angle) * speed;
+            this.vY = MathUtils.sinDeg(angle) * speed;
+
+            // 设置爆炸散射的持续时间（0.15秒~0.3秒不等，产生参差不齐的悬停感）
+            this.explodeTimer = MathUtils.random(0.15F, 0.3F);
+
+            this.color = new Color(MathUtils.random(0.6F, 1.0F), 1.0F, 1.0F, 1.0F); // 极亮的青白光点
+            this.size = MathUtils.random(2.0F, 4.0F) * Settings.scale;
+            this.duration = 1.5F; // 最大保底存活时间
+        }
+
+        @Override
+        public void update() {
+            this.x += this.vX * Gdx.graphics.getDeltaTime();
+            this.y += this.vY * Gdx.graphics.getDeltaTime();
+
+            if (!this.isReturning) {
+                // 【阶段1：爆开与减速】
+                this.vX *= 0.85F; // 空气阻力，迅速减速
+                this.vY *= 0.85F;
+
+                this.explodeTimer -= Gdx.graphics.getDeltaTime();
+                if (this.explodeTimer <= 0.0F) {
+                    this.isReturning = true; // 悬停结束，进入追踪阶段
+                }
+            } else {
+                // 【阶段2：追踪并加速飞向玩家】
+                // 实时获取玩家中心点作为目标
+                this.targetX = AbstractDungeon.player.hb.cX;
+                this.targetY = AbstractDungeon.player.hb.cY;
+
+                float dx = this.targetX - this.x;
+                float dy = this.targetY - this.y;
+                float angleToTarget = (float) Math.atan2(dy, dx);
+
+                // 施加极大的向心加速度
+                float homingAccel = 4000.0F * Settings.scale * Gdx.graphics.getDeltaTime();
+                this.vX += MathUtils.cos(angleToTarget) * homingAccel;
+                this.vY += MathUtils.sin(angleToTarget) * homingAccel;
+
+                // 如果距离玩家非常近，则直接消失（被吸收）
+                if (Vector2.dst(this.x, this.y, this.targetX, this.targetY) < 40.0F * Settings.scale) {
+                    this.isDone = true;
+                }
+            }
+
+            this.duration -= Gdx.graphics.getDeltaTime();
+            if (this.duration < 0.0F) {
+                this.isDone = true;
+            }
+        }
+
+        @Override
+        public void render(SpriteBatch sb) {
+            sb.setBlendFunction(770, 1);
+            sb.setColor(this.color);
+
+            // 获取当前运动方向，用于把方形拉长成线状
+            float rot = MathUtils.atan2(this.vY, this.vX) * MathUtils.radiansToDegrees;
+
+            // 根据速度动态拉长光点：速度越快，拉得越长
+            float speedScale = (float) Math.sqrt(this.vX * this.vX + this.vY * this.vY) / (400.0F * Settings.scale);
+            speedScale = MathUtils.clamp(speedScale, 0.5F, 3.0F);
+
+            sb.draw(this.img,
+                    this.x, this.y,
+                    this.size / 2.0F, this.size / 2.0F,
+                    this.size, this.size,
+                    speedScale * 2.0F, 0.5F, rot,
+                    0, 0, 32, 32, false, false);
+
             sb.setBlendFunction(770, 771);
         }
 
